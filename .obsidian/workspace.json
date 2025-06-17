@@ -170,6 +170,7 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "done/16b-ENGINE-01b-grid-creation.md",
     "todo/16a-ENGINE-01a-event-listeners.md",
     "done/16a-ENGINE-01a-event-listeners.md",
     "todo/23-FEATURES-01-word-mechanics.md",
@@ -205,7 +206,6 @@
     "done/12-SYSTEMS-01-grid-adapter.md",
     "done/11-CORE-05-game-state-machine.md",
     "todo/10-CORE-04-score-logic.md",
-    "done/10-CORE-04-score-logic.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]
