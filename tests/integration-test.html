@@ -3,36 +3,394 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integration Test - Ice Cubes</title>
+    <title>Ice Cubes Test - Event Contract Verification</title>
     <style>
         body {
-            font-family: monospace;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             padding: 20px;
-            background: #1a1a2e;
-            color: #eee;
+            background: #f5f5f5;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
         }
-        h1 { color: #4fbdba; }
-        pre {
-            background: #0f0f1e;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
+        h1 { 
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .button-group {
+            margin: 10px 0;
+        }
+        .button-group h3 {
+            margin: 10px 0 5px 0;
+            color: #555;
         }
         button {
             padding: 10px 20px;
             margin: 5px;
-            background: #4fbdba;
-            color: #000;
+            background: #3498db;
+            color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
         }
-        button:hover { background: #3da9a6; }
+        button:hover { 
+            background: #2980b9; 
+        }
+        button.clear {
+            background: #e74c3c;
+        }
+        button.clear:hover {
+            background: #c0392b;
+        }
+        button.validate {
+            background: #27ae60;
+        }
+        button.validate:hover {
+            background: #229954;
+        }
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .event-entry {
+            border-bottom: 1px solid #34495e;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .event-type {
+            color: #3498db;
+            font-weight: bold;
+        }
+        .event-data {
+            color: #2ecc71;
+        }
+        .timestamp {
+            color: #95a5a6;
+            font-size: 11px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .info-box code {
+            background: #34495e;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        #contract-validation {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .validation-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .validation-pass {
+            background: #d5f4e6;
+            border-left: 4px solid #27ae60;
+            color: #27ae60;
+        }
+        .validation-fail {
+            background: #fce4e4;
+            border-left: 4px solid #e74c3c;
+            color: #e74c3c;
+        }
     </style>
 </head>
 <body>
+    <a href="index.html" class="back-link">← Back to Test Suite</a>
     <h1>Ice Cubes Test - Event Contract Verification</h1>
-    <p>This test harness will be implemented in TESTING-02 task</p>
-    <pre id="output">Placeholder - to be implemented</pre>
+    
+    <div class="info-box">
+        <h3>What is Ice Cubes Testing?</h3>
+        <p>Ice Cubes tests verify that event contracts match between systems. Like ice cubes melting into water, 
+        we want to catch mismatches early - when event names match but data shapes don't (ice cubes vs water problem).</p>
+        <p>Use the wildcard listener to capture ALL events and verify their data contracts.</p>
+    </div>
+
+    <div class="controls">
+        <h2>Test Controls</h2>
+        
+        <div class="button-group">
+            <h3>Core Events</h3>
+            <button onclick="testTilePress()">Test TILE_PRESSED</button>
+            <button onclick="testWordSubmit()">Test WORD_SUBMITTED</button>
+            <button onclick="testScoreChange()">Test SCORE_CHANGED</button>
+        </div>
+        
+        <div class="button-group">
+            <h3>Special Tile Events</h3>
+            <button onclick="testBombTrigger()">Test BOMB_TRIGGERED</button>
+            <button onclick="testMultiplier()">Test MULTIPLIER_ACTIVATED</button>
+        </div>
+        
+        <div class="button-group">
+            <h3>Cascade Events</h3>
+            <button onclick="testTileDestabilized()">Test TILE_DESTABILIZED</button>
+            <button onclick="testRippleEffect()">Test RIPPLE_EFFECT</button>
+        </div>
+        
+        <div class="button-group">
+            <h3>Contract Validation</h3>
+            <button class="validate" onclick="validateAllContracts()">Validate All Contracts</button>
+            <button class="clear" onclick="clearOutput()">Clear Output</button>
+        </div>
+    </div>
+
+    <h2>Event Log</h2>
+    <pre id="output">Waiting for events...</pre>
+    
+    <div id="contract-validation">
+        <h2>Contract Validation Results</h2>
+        <div id="validation-results">Click "Validate All Contracts" to test event contracts</div>
+    </div>
+
+    <script type="module">
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes, EventContracts } from '../src/core/EventTypes.js';
+        
+        const eventBus = new EventBus();
+        const output = document.getElementById('output');
+        const capturedEvents = [];
+        
+        // Enable contract validation
+        eventBus.enableContractValidation = true;
+        
+        // Log ALL events using wildcard listener
+        eventBus.on('*', (type, data) => {
+            const timestamp = new Date().toISOString();
+            const eventRecord = { type, data, timestamp };
+            capturedEvents.push(eventRecord);
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'event-entry';
+            logEntry.innerHTML = `
+                <div class="timestamp">${timestamp}</div>
+                <div class="event-type">EVENT: ${type}</div>
+                <div class="event-data">DATA: ${JSON.stringify(data, null, 2)}</div>
+            `;
+            
+            if (output.textContent === 'Waiting for events...') {
+                output.textContent = '';
+            }
+            output.appendChild(logEntry);
+            
+            // Also log to console for debugging
+            console.log(`EVENT: ${type}`);
+            console.log('DATA:', data);
+            console.log('---');
+            
+            // Scroll to bottom
+            output.scrollTop = output.scrollHeight;
+        });
+        
+        // Test functions
+        window.testTilePress = function() {
+            eventBus.emit(EventTypes.TILE_PRESSED, {
+                x: 3,
+                y: 4,
+                timestamp: Date.now()
+            });
+        };
+        
+        window.testWordSubmit = function() {
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'HELLO',
+                tiles: [
+                    { x: 0, y: 0, letter: 'H' },
+                    { x: 1, y: 0, letter: 'E' },
+                    { x: 2, y: 0, letter: 'L' },
+                    { x: 3, y: 0, letter: 'L' },
+                    { x: 4, y: 0, letter: 'O' }
+                ],
+                timestamp: Date.now()
+            });
+        };
+        
+        window.testScoreChange = function() {
+            eventBus.emit(EventTypes.SCORE_CHANGED, {
+                score: 1250,
+                delta: 50,
+                source: 'word_complete'
+            });
+        };
+        
+        window.testBombTrigger = function() {
+            eventBus.emit(EventTypes.BOMB_TRIGGERED, {
+                x: 2,
+                y: 3,
+                affectedTiles: [
+                    { x: 1, y: 3 },
+                    { x: 2, y: 2 },
+                    { x: 2, y: 4 },
+                    { x: 3, y: 3 }
+                ],
+                timestamp: Date.now()
+            });
+        };
+        
+        window.testMultiplier = function() {
+            eventBus.emit(EventTypes.MULTIPLIER_ACTIVATED, {
+                x: 5,
+                y: 2,
+                multiplier: 3,
+                wordScore: 150
+            });
+        };
+        
+        window.testTileDestabilized = function() {
+            eventBus.emit(EventTypes.TILE_DESTABILIZED, {
+                tile: { x: 4, y: 6 },
+                surgeLevel: 2,
+                source: 'cascade'
+            });
+        };
+        
+        window.testRippleEffect = function() {
+            eventBus.emit(EventTypes.RIPPLE_EFFECT, {
+                epicenter: { x: 3, y: 3 },
+                affectedTiles: [
+                    { x: 2, y: 3 },
+                    { x: 4, y: 3 },
+                    { x: 3, y: 2 },
+                    { x: 3, y: 4 }
+                ],
+                surgePower: 3,
+                timestamp: Date.now()
+            });
+        };
+        
+        window.clearOutput = function() {
+            output.textContent = 'Waiting for events...';
+            capturedEvents.length = 0;
+        };
+        
+        window.validateAllContracts = function() {
+            const resultsDiv = document.getElementById('validation-results');
+            resultsDiv.innerHTML = '';
+            
+            let passCount = 0;
+            let failCount = 0;
+            
+            // Test each event type
+            Object.keys(EventTypes).forEach(eventKey => {
+                const eventType = EventTypes[eventKey];
+                const contract = EventContracts[eventType];
+                
+                if (!contract) {
+                    const result = document.createElement('div');
+                    result.className = 'validation-result validation-fail';
+                    result.textContent = `❌ ${eventType} - No contract defined`;
+                    resultsDiv.appendChild(result);
+                    failCount++;
+                    return;
+                }
+                
+                // Create test data based on contract
+                const testData = createTestData(contract);
+                
+                try {
+                    // Temporarily disable logging for validation
+                    const originalLogging = eventBus.enableLogging;
+                    eventBus.enableLogging = false;
+                    
+                    eventBus.emit(eventType, testData);
+                    
+                    eventBus.enableLogging = originalLogging;
+                    
+                    const result = document.createElement('div');
+                    result.className = 'validation-result validation-pass';
+                    result.innerHTML = `✅ ${eventType} - Contract valid<br><small>Test data: ${JSON.stringify(testData)}</small>`;
+                    resultsDiv.appendChild(result);
+                    passCount++;
+                } catch (error) {
+                    const result = document.createElement('div');
+                    result.className = 'validation-result validation-fail';
+                    result.innerHTML = `❌ ${eventType} - ${error.message}<br><small>Test data: ${JSON.stringify(testData)}</small>`;
+                    resultsDiv.appendChild(result);
+                    failCount++;
+                }
+            });
+            
+            // Summary
+            const summary = document.createElement('div');
+            summary.style.marginTop = '20px';
+            summary.style.fontWeight = 'bold';
+            summary.innerHTML = `<h3>Summary: ${passCount} passed, ${failCount} failed</h3>`;
+            resultsDiv.appendChild(summary);
+        };
+        
+        // Helper to create test data based on contract
+        function createTestData(contract) {
+            const testData = {};
+            
+            Object.entries(contract).forEach(([key, type]) => {
+                if (type === 'number') {
+                    testData[key] = 42;
+                } else if (type === 'string') {
+                    testData[key] = 'test';
+                } else if (type === 'boolean') {
+                    testData[key] = true;
+                } else if (type.startsWith('Array')) {
+                    testData[key] = [];
+                } else if (type.startsWith('{')) {
+                    // Simple object
+                    testData[key] = { x: 1, y: 2 };
+                } else {
+                    testData[key] = null;
+                }
+            });
+            
+            return testData;
+        }
+        
+        // Make functions available globally
+        window.eventBus = eventBus;
+        window.EventTypes = EventTypes;
+        window.capturedEvents = capturedEvents;
+    </script>
 </body>
 </html>
