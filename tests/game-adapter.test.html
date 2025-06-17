@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameAdapter Tests</title>
+</head>
+<body>
+    <h1>GameAdapter Tests</h1>
+    <div id="test-results"></div>
+    
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { GameAdapter } from '../src/adapters/GameAdapter.js';
+        import { GameLogic } from '../src/core/GameLogic.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+        
+        // Test 1: GameAdapter constructor
+        test('GameAdapter initializes with dependencies', () => {
+            const gameLogic = new GameLogic();
+            const eventBus = new EventBus();
+            const adapter = new GameAdapter(gameLogic, eventBus);
+            
+            Assert.equals(adapter.gameLogic === gameLogic, true, 'Should store gameLogic reference');
+            Assert.equals(adapter.eventBus === eventBus, true, 'Should store eventBus reference');
+            Assert.equals(adapter.startTime, null, 'Should initialize startTime as null');
+        });
+        
+        // Test 2: Game start initializes level
+        test('GameAdapter handles GAME_START event', () => {
+            const gameLogic = new GameLogic();
+            const eventBus = new EventBus();
+            const adapter = new GameAdapter(gameLogic, eventBus);
+            
+            let levelLoadedEvent = null;
+            eventBus.on(EventTypes.LEVEL_LOADED, (data) => {
+                levelLoadedEvent = data;
+            });
+            
+            const startTime = Date.now();
+            eventBus.emit(EventTypes.GAME_START, {
+                level: 1,
+                timestamp: startTime
+            });
+            
+            // Check game state was updated
+            Assert.equals(gameLogic.gamePhase, 'playing', 'Game phase should be playing');
+            Assert.equals(gameLogic.level, 1, 'Level should be set');
+            Assert.equals(adapter.startTime, startTime, 'Start time should be recorded');
+            
+            // Check level loaded event
+            Assert.truthy(levelLoadedEvent, 'LEVEL_LOADED event should be emitted');
+            Assert.equals(levelLoadedEvent.levelId, 1, 'Level ID should match');
+            Assert.truthy(levelLoadedEvent.config, 'Should include level config');
+            Assert.equals(levelLoadedEvent.timestamp, startTime, 'Should preserve timestamp');
+        });
+        
+        // Test 3: Score changes update game state
+        test('GameAdapter handles SCORE_CHANGED event', () => {
+            const gameLogic = new GameLogic();
+            const eventBus = new EventBus();
+            const adapter = new GameAdapter(gameLogic, eventBus);
+            
+            // Start game first
+            eventBus.emit(EventTypes.GAME_START, {
+                level: 1,
+                timestamp: Date.now()
+            });
+            
+            // Update score
+            eventBus.emit(EventTypes.SCORE_CHANGED, {
+                score: 100,
+                delta: 100,
+                source: 'word'
+            });
+            
+            Assert.equals(gameLogic.score, 100, 'Score should be updated');
+        });
+        
+        // Test 4: Victory condition triggers VICTORY event
+        test('GameAdapter emits VICTORY when target score reached', () => {
+            const gameLogic = new GameLogic();
+            const eventBus = new EventBus();
+            const adapter = new GameAdapter(gameLogic, eventBus);
+            
+            let victoryEvent = null;
+            eventBus.on(EventTypes.VICTORY, (data) => {
+                victoryEvent = data;
+            });
+            
+            // Start game
+            const startTime = Date.now();
+            eventBus.emit(EventTypes.GAME_START, {
+                level: 1,
+                timestamp: startTime
+            });
+            
+            // Update score to reach target (1000)
+            eventBus.emit(EventTypes.SCORE_CHANGED, {
+                score: 1000,
+                delta: 1000,
+                source: 'word'
+            });
+            
+            // Check victory event
+            Assert.truthy(victoryEvent, 'VICTORY event should be emitted');
+            Assert.equals(victoryEvent.score, 1000, 'Victory score should match');
+            Assert.equals(victoryEvent.movesUsed, 0, 'Moves used should be 0');
+            Assert.truthy(victoryEvent.timeElapsed >= 0, 'Time elapsed should be recorded');
+            Assert.equals(gameLogic.gamePhase, 'victory', 'Game phase should be victory');
+        });
+        
+        // Test 5: Move consumption
+        test('GameAdapter handles MOVES_CHANGED event', () => {
+            const gameLogic = new GameLogic();
+            const eventBus = new EventBus();
+            const adapter = new GameAdapter(gameLogic, eventBus);
+            
+            // Start game
+            eventBus.emit(EventTypes.GAME_START, {
+                level: 1,
+                timestamp: Date.now()
+            });
+            
+            // Consume a move
+            eventBus.emit(EventTypes.MOVES_CHANGED, {
+                moves: 1,
+                movesUsed: 1,
+                timestamp: Date.now()
+            });
+            
+            Assert.equals(gameLogic.moves, 1, 'Moves should be incremented');
+        });
+        
+        // Test 6: Defeat condition when moves run out
+        test('GameAdapter emits DEFEAT when no moves left', () => {
+            const gameLogic = new GameLogic();
+            const eventBus = new EventBus();
+            const adapter = new GameAdapter(gameLogic, eventBus);
+            
+            let defeatEvent = null;
+            eventBus.on(EventTypes.DEFEAT, (data) => {
+                defeatEvent = data;
+            });
+            
+            // Start game with low move limit
+            eventBus.emit(EventTypes.GAME_START, {
+                level: 1,
+                timestamp: Date.now()
+            });
+            
+            // Use up all moves (default is 20)
+            for (let i = 0; i < 20; i++) {
+                eventBus.emit(EventTypes.MOVES_CHANGED, {
+                    moves: i + 1,
+                    movesUsed: i + 1,
+                    timestamp: Date.now()
+                });
+            }
+            
+            // Check defeat event
+            Assert.truthy(defeatEvent, 'DEFEAT event should be emitted');
+            Assert.equals(defeatEvent.score, 0, 'Score should be 0');
+            Assert.equals(defeatEvent.movesUsed, 20, 'All moves should be used');
+            Assert.equals(defeatEvent.reason, 'NO_MOVES_LEFT', 'Reason should be NO_MOVES_LEFT');
+            Assert.equals(gameLogic.gamePhase, 'defeat', 'Game phase should be defeat');
+        });
+        
+        // Test 7: No victory/defeat when game not active
+        test('GameAdapter does not emit events when game not active', () => {
+            const gameLogic = new GameLogic();
+            const eventBus = new EventBus();
+            const adapter = new GameAdapter(gameLogic, eventBus);
+            
+            let victoryEvent = null;
+            let defeatEvent = null;
+            
+            eventBus.on(EventTypes.VICTORY, (data) => {
+                victoryEvent = data;
+            });
+            eventBus.on(EventTypes.DEFEAT, (data) => {
+                defeatEvent = data;
+            });
+            
+            // Don't start game, phase should be 'waiting'
+            Assert.equals(gameLogic.gamePhase, 'waiting', 'Game should be waiting');
+            
+            // Try to update score
+            eventBus.emit(EventTypes.SCORE_CHANGED, {
+                score: 2000,
+                delta: 2000,
+                source: 'word'
+            });
+            
+            // Try to consume moves
+            eventBus.emit(EventTypes.MOVES_CHANGED, {
+                moves: 50,
+                movesUsed: 50,
+                timestamp: Date.now()
+            });
+            
+            Assert.equals(victoryEvent, null, 'No victory event should be emitted');
+            Assert.equals(defeatEvent, null, 'No defeat event should be emitted');
+            Assert.equals(gameLogic.score, 0, 'Score should not change');
+            Assert.equals(gameLogic.moves, 0, 'Moves should not change');
+        });
+        
+        // Test 8: Multiple score updates
+        test('GameAdapter handles multiple score updates correctly', () => {
+            const gameLogic = new GameLogic();
+            const eventBus = new EventBus();
+            const adapter = new GameAdapter(gameLogic, eventBus);
+            
+            // Start game
+            eventBus.emit(EventTypes.GAME_START, {
+                level: 1,
+                timestamp: Date.now()
+            });
+            
+            // Multiple score updates
+            eventBus.emit(EventTypes.SCORE_CHANGED, {
+                score: 100,
+                delta: 100,
+                source: 'word'
+            });
+            
+            eventBus.emit(EventTypes.SCORE_CHANGED, {
+                score: 250,
+                delta: 150,
+                source: 'combo'
+            });
+            
+            eventBus.emit(EventTypes.SCORE_CHANGED, {
+                score: 300,
+                delta: 50,
+                source: 'bonus'
+            });
+            
+            Assert.equals(gameLogic.score, 300, 'Score should accumulate correctly');
+        });
+        
+        // Test 9: Level configuration in LEVEL_LOADED
+        test('GameAdapter includes proper level configuration', () => {
+            const gameLogic = new GameLogic();
+            const eventBus = new EventBus();
+            const adapter = new GameAdapter(gameLogic, eventBus);
+            
+            let levelLoadedEvent = null;
+            eventBus.on(EventTypes.LEVEL_LOADED, (data) => {
+                levelLoadedEvent = data;
+            });
+            
+            eventBus.emit(EventTypes.GAME_START, {
+                level: 5,
+                timestamp: Date.now()
+            });
+            
+            Assert.equals(levelLoadedEvent.levelId, 5, 'Level ID should match');
+            Assert.equals(levelLoadedEvent.config.id, 5, 'Config should have level ID');
+            Assert.equals(levelLoadedEvent.config.moveLimit, 20, 'Config should have move limit');
+            Assert.equals(levelLoadedEvent.config.targetScore, 1000, 'Config should have target score');
+        });
+        
+        // Test 10: Time elapsed calculation
+        test('GameAdapter calculates time elapsed correctly', async () => {
+            const gameLogic = new GameLogic();
+            const eventBus = new EventBus();
+            const adapter = new GameAdapter(gameLogic, eventBus);
+            
+            let victoryEvent = null;
+            eventBus.on(EventTypes.VICTORY, (data) => {
+                victoryEvent = data;
+            });
+            
+            const startTime = Date.now();
+            eventBus.emit(EventTypes.GAME_START, {
+                level: 1,
+                timestamp: startTime
+            });
+            
+            // Wait a bit
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Trigger victory
+            eventBus.emit(EventTypes.SCORE_CHANGED, {
+                score: 1000,
+                delta: 1000,
+                source: 'word'
+            });
+            
+            Assert.truthy(victoryEvent.timeElapsed >= 100, 'Time elapsed should be at least 100ms');
+            Assert.truthy(victoryEvent.timeElapsed < 200, 'Time elapsed should be less than 200ms');
+        });
+    </script>
+</body>
+</html>
