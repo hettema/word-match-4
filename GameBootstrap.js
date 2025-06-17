@@ -1,6 +1,7 @@
 // GameBootstrap.js - Mandatory entry point for Word Match game
 import { EventBus } from './src/core/EventBus.js';
 import { EventTypes } from './src/core/EventTypes.js';
+import { WordValidator } from './src/systems/WordValidator.js';
 
 // TEMPORARY: Load visual stub for early feedback
 const script = document.createElement('script');
@@ -80,7 +81,8 @@ class GameBootstrap {
         // this.scoreLogic = new ScoreLogic();
         
         // WordValidator is NOW pure - receives pre-loaded dictionary
-        // this.wordValidator = new WordValidator(this.dictionaryWords);
+        this.wordValidator = new WordValidator(this.dictionaryWords);
+        console.log(`WordValidator initialized with ${this.wordValidator.getDictionarySize()} words`);
         
         // 4. Create adapters (connect logic to events)
         // Note: We'll create these as they're implemented

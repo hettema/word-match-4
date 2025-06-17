@@ -170,6 +170,9 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "done/08-CORE-02-word-validator.md",
+    "tests/word-validator.test.html",
+    "src/systems/WordValidator.js",
     "done/07-CORE-01-grid-logic.md",
     "tests/grid-logic-ice-cubes.html",
     "tests/grid-logic.test.html",
@@ -202,10 +205,7 @@
     "CLAUDE.md",
     "tests/integration-test.html",
     "done/04-TESTING-01-test-infrastructure.md",
-    "tests/README.md",
     "tests/event-bus.test.html",
-    "tests/test-runner.js",
-    "src/core/EventBus.js",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]

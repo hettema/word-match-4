@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WordValidator Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .pass { color: green; }
+        .fail { color: red; }
+        .summary { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>WordValidator Tests</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        import { WordValidator } from '../src/systems/WordValidator.js';
+        
+        const results = document.getElementById('results');
+        let passed = 0;
+        let failed = 0;
+        
+        function assert(condition, message) {
+            const div = document.createElement('div');
+            if (condition) {
+                div.className = 'pass';
+                div.textContent = '✓ ' + message;
+                passed++;
+            } else {
+                div.className = 'fail';
+                div.textContent = '✗ ' + message;
+                failed++;
+            }
+            results.appendChild(div);
+            console.log(div.textContent);
+        }
+        
+        function runTests() {
+            console.log('=== WordValidator Tests Starting ===');
+            
+            // Create test dictionary
+            const testDictionary = new Set(['CAT', 'DOG', 'BIRD', 'FISH', 'HELLO', 'WORLD', 'TEST']);
+            const validator = new WordValidator(testDictionary);
+            
+            // Test 1: Valid words
+            assert(validator.isValid('cat') === true, 'Lowercase valid word returns true');
+            assert(validator.isValid('CAT') === true, 'Uppercase valid word returns true');
+            assert(validator.isValid('DoG') === true, 'Mixed case valid word returns true');
+            
+            // Test 2: Invalid words
+            assert(validator.isValid('xyz') === false, 'Non-dictionary word returns false');
+            assert(validator.isValid('a') === false, 'Too short word returns false');
+            assert(validator.isValid('ab') === false, 'Two letter word returns false');
+            
+            // Test 3: Invalid input
+            assert(validator.isValid('') === false, 'Empty string returns false');
+            assert(validator.isValid(null) === false, 'Null returns false');
+            assert(validator.isValid(123) === false, 'Number returns false');
+            
+            // Test 4: Get invalid reason
+            assert(validator.getInvalidReason('cat') === null, 'Valid word returns null');
+            assert(validator.getInvalidReason('ab') === 'TOO_SHORT', 'Short word returns TOO_SHORT');
+            assert(validator.getInvalidReason('xyz') === 'NOT_IN_DICTIONARY', 'Invalid word returns NOT_IN_DICTIONARY');
+            assert(validator.getInvalidReason('') === 'INVALID_INPUT', 'Empty string returns INVALID_INPUT');
+            assert(validator.getInvalidReason('cat123') === 'INVALID_CHARACTERS', 'Word with numbers returns INVALID_CHARACTERS');
+            
+            // Test 5: Minimum length
+            assert(validator.getMinimumLength() === 3, 'Default minimum length is 3');
+            
+            // Test 6: Custom minimum length
+            const customValidator = new WordValidator(testDictionary, { minimumLength: 4 });
+            assert(customValidator.isValid('cat') === false, 'Three letter word invalid with min length 4');
+            assert(customValidator.isValid('bird') === true, 'Four letter word valid with min length 4');
+            
+            // Test 7: Character validation
+            assert(validator.isAllowedCharacter('A') === true, 'Letter A is allowed');
+            assert(validator.isAllowedCharacter('z') === true, 'Letter z is allowed');
+            assert(validator.isAllowedCharacter('1') === false, 'Number 1 is not allowed');
+            assert(validator.isAllowedCharacter('@') === false, 'Symbol @ is not allowed');
+            
+            // Test 8: Word values
+            assert(validator.getWordValue('CAT') === 5, 'CAT value is 5 (C=3, A=1, T=1)');
+            assert(validator.getWordValue('DOG') === 5, 'DOG value is 5 (D=2, O=1, G=2)');
+            assert(validator.getWordValue('xyz') === 0, 'Invalid word has value 0');
+            
+            // Test 9: Dictionary info
+            assert(validator.getDictionarySize() === 7, 'Dictionary size is 7');
+            assert(validator.isDictionaryLoaded() === true, 'Dictionary is loaded');
+            
+            // Test 10: Empty dictionary
+            const emptyValidator = new WordValidator(new Set());
+            assert(emptyValidator.isValid('cat') === false, 'No words valid with empty dictionary');
+            assert(emptyValidator.isDictionaryLoaded() === false, 'Empty dictionary not considered loaded');
+            
+            // Summary
+            const summary = document.createElement('div');
+            summary.className = 'summary';
+            summary.textContent = `Tests complete: ${passed} passed, ${failed} failed`;
+            results.appendChild(summary);
+            
+            console.log(`\n=== Test Summary: ${passed} passed, ${failed} failed ===`);
+        }
+        
+        runTests();
+    </script>
+</body>
+</html>
