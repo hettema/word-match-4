@@ -163,6 +163,10 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "todo/15-SYSTEMS-04-score-adapter.md",
+    "done/15-SYSTEMS-04-score-adapter.md",
+    "tests/score-adapter.test.html",
+    "src/adapters/ScoreAdapter.js",
     "todo/14-SYSTEMS-03-game-adapter.md",
     "done/14-SYSTEMS-03-game-adapter.md",
     "tests/game-adapter.test.html",
@@ -180,8 +184,6 @@
     "src/core/GameStateMachine.js",
     "todo/10-CORE-04-score-logic.md",
     "done/10-CORE-04-score-logic.md",
-    "tests/score-logic.test.html",
-    "src/core/ScoreLogic.js",
     "done/09-CORE-03-game-logic.md",
     "done/08-CORE-02-word-validator.md",
     "done/07-CORE-01-grid-logic.md",
@@ -197,8 +199,6 @@
     "todo/05b-TESTING-02b-integration-dashboard.md",
     "todo/17-ENGINE-02-tile-visual.md",
     "todo/18-ENGINE-03-input-handler.md",
-    "todo/11-CORE-05-game-state-machine.md",
-    "done/03a-FOUNDATION-03a-contract-validation.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreAdapter Tests</title>
+</head>
+<body>
+    <h1>ScoreAdapter Tests</h1>
+    <div id="test-results"></div>
+    
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { ScoreAdapter } from '../src/adapters/ScoreAdapter.js';
+        import { ScoreLogic } from '../src/core/ScoreLogic.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+        
+        // Test 1: ScoreAdapter constructor
+        test('ScoreAdapter initializes with dependencies', () => {
+            const scoreLogic = new ScoreLogic();
+            const eventBus = new EventBus();
+            const adapter = new ScoreAdapter(scoreLogic, eventBus);
+            
+            Assert.equals(adapter.scoreLogic === scoreLogic, true, 'Should store scoreLogic reference');
+            Assert.equals(adapter.eventBus === eventBus, true, 'Should store eventBus reference');
+            Assert.equals(adapter.currentScore, 0, 'Should initialize score as 0');
+            Assert.equals(adapter.currentCombo, 0, 'Should initialize combo as 0');
+            Assert.equals(adapter.pendingMultiplier, 1, 'Should initialize multiplier as 1');
+        });
+        
+        // Test 2: Word validation increases score
+        test('ScoreAdapter calculates score for validated words', () => {
+            const scoreLogic = new ScoreLogic();
+            const eventBus = new EventBus();
+            const adapter = new ScoreAdapter(scoreLogic, eventBus);
+            
+            let scoreChangedEvent = null;
+            eventBus.on(EventTypes.SCORE_CHANGED, (data) => {
+                scoreChangedEvent = data;
+            });
+            
+            // Emit word validated event with CAT (C=3, A=1, T=1)
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'CAT',
+                score: 5, // This is ignored, adapter recalculates
+                tiles: [
+                    { x: 0, y: 0, letter: 'C', value: 3 },
+                    { x: 1, y: 0, letter: 'A', value: 1 },
+                    { x: 2, y: 0, letter: 'T', value: 1 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Check score changed event
+            Assert.truthy(scoreChangedEvent, 'SCORE_CHANGED event should be emitted');
+            Assert.equals(scoreChangedEvent.score, 15, 'Score should be 15 (base 5 + length bonus 10)');
+            Assert.equals(scoreChangedEvent.delta, 15, 'Delta should be 15');
+            Assert.equals(scoreChangedEvent.source, 'word', 'Source should be word');
+            Assert.equals(adapter.currentScore, 15, 'Current score should be updated');
+        });
+        
+        // Test 3: Combo increases with consecutive words
+        test('ScoreAdapter tracks combo multiplier', () => {
+            const scoreLogic = new ScoreLogic();
+            const eventBus = new EventBus();
+            const adapter = new ScoreAdapter(scoreLogic, eventBus);
+            
+            let comboEvents = [];
+            eventBus.on(EventTypes.COMBO_CHANGED, (data) => {
+                comboEvents.push(data);
+            });
+            
+            // First word
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'CAT',
+                score: 5, // Required field
+                tiles: [
+                    { x: 0, y: 0, letter: 'C', value: 3 },
+                    { x: 1, y: 0, letter: 'A', value: 1 },
+                    { x: 2, y: 0, letter: 'T', value: 1 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Second word
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'DOG',
+                score: 5, // Required field
+                tiles: [
+                    { x: 0, y: 1, letter: 'D', value: 2 },
+                    { x: 1, y: 1, letter: 'O', value: 1 },
+                    { x: 2, y: 1, letter: 'G', value: 2 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Check combo events
+            Assert.equals(comboEvents.length, 2, 'Should emit 2 combo events');
+            Assert.equals(comboEvents[0].combo, 1, 'First combo should be 1');
+            Assert.equals(comboEvents[0].multiplier, 1.5, 'First multiplier should be 1.5');
+            Assert.equals(comboEvents[1].combo, 2, 'Second combo should be 2');
+            Assert.equals(comboEvents[1].multiplier, 2, 'Second multiplier should be 2.0');
+        });
+        
+        // Test 4: Multiplier activation affects next word
+        test('ScoreAdapter applies pending multiplier to next word', () => {
+            const scoreLogic = new ScoreLogic();
+            const eventBus = new EventBus();
+            const adapter = new ScoreAdapter(scoreLogic, eventBus);
+            
+            let scoreEvents = [];
+            eventBus.on(EventTypes.SCORE_CHANGED, (data) => {
+                scoreEvents.push(data);
+            });
+            
+            // Activate multiplier
+            eventBus.emit(EventTypes.MULTIPLIER_ACTIVATED, {
+                x: 5,
+                y: 5,
+                multiplier: 3,
+                wordScore: 0 // Must be a number, use 0 for no immediate score
+            });
+            
+            // Submit word (should use 3x multiplier)
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'CAT',
+                score: 5, // Required field
+                tiles: [
+                    { x: 0, y: 0, letter: 'C', value: 3 },
+                    { x: 1, y: 0, letter: 'A', value: 1 },
+                    { x: 2, y: 0, letter: 'T', value: 1 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Base score 5 + bonus 10 = 15, with 3x multiplier = 45
+            Assert.equals(scoreEvents[0].delta, 45, 'Score should be multiplied by 3');
+            Assert.equals(adapter.pendingMultiplier, 1, 'Multiplier should reset after use');
+        });
+        
+        // Test 5: Immediate multiplier scoring
+        test('ScoreAdapter handles immediate multiplier scoring', () => {
+            const scoreLogic = new ScoreLogic();
+            const eventBus = new EventBus();
+            const adapter = new ScoreAdapter(scoreLogic, eventBus);
+            
+            adapter.currentScore = 100; // Start with some score
+            
+            let scoreEvent = null;
+            eventBus.on(EventTypes.SCORE_CHANGED, (data) => {
+                scoreEvent = data;
+            });
+            
+            // Multiplier with immediate word score
+            eventBus.emit(EventTypes.MULTIPLIER_ACTIVATED, {
+                x: 5,
+                y: 5,
+                multiplier: 2,
+                wordScore: 50 // Word already scored 50
+            });
+            
+            // Should add the multiplier bonus (50 * 2 - 50 = 50)
+            Assert.equals(scoreEvent.delta, 50, 'Delta should be multiplier bonus');
+            Assert.equals(scoreEvent.source, 'multiplier', 'Source should be multiplier');
+            Assert.equals(adapter.currentScore, 150, 'Score should increase by bonus');
+        });
+        
+        // Test 6: Multiple words with combo scoring
+        test('ScoreAdapter calculates combo scoring correctly', () => {
+            const scoreLogic = new ScoreLogic();
+            const eventBus = new EventBus();
+            const adapter = new ScoreAdapter(scoreLogic, eventBus);
+            
+            let totalScore = 0;
+            eventBus.on(EventTypes.SCORE_CHANGED, (data) => {
+                totalScore = data.score;
+            });
+            
+            // First word (combo 0)
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'CAT',
+                score: 5, // Required field
+                tiles: [
+                    { x: 0, y: 0, letter: 'C', value: 3 },
+                    { x: 1, y: 0, letter: 'A', value: 1 },
+                    { x: 2, y: 0, letter: 'T', value: 1 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            const firstScore = totalScore; // Should be 15
+            
+            // Second word (combo 1, multiplier 1.5)
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'CAT',
+                score: 5, // Required field
+                tiles: [
+                    { x: 0, y: 0, letter: 'C', value: 3 },
+                    { x: 1, y: 0, letter: 'A', value: 1 },
+                    { x: 2, y: 0, letter: 'T', value: 1 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Base 15 * 1.5 combo = 22
+            Assert.equals(totalScore, 37, 'Total score should be 15 + 22');
+        });
+        
+        // Test 7: Reset combo
+        test('ScoreAdapter resets combo correctly', () => {
+            const scoreLogic = new ScoreLogic();
+            const eventBus = new EventBus();
+            const adapter = new ScoreAdapter(scoreLogic, eventBus);
+            
+            // Build up combo
+            adapter.currentCombo = 5;
+            adapter.pendingMultiplier = 2;
+            
+            let comboEvent = null;
+            eventBus.on(EventTypes.COMBO_CHANGED, (data) => {
+                comboEvent = data;
+            });
+            
+            adapter.resetCombo();
+            
+            Assert.equals(adapter.currentCombo, 0, 'Combo should reset to 0');
+            Assert.equals(adapter.pendingMultiplier, 1, 'Multiplier should reset to 1');
+            Assert.equals(comboEvent.combo, 0, 'Should emit combo 0');
+            Assert.equals(comboEvent.multiplier, 1, 'Should emit multiplier 1');
+        });
+        
+        // Test 8: Reset score
+        test('ScoreAdapter resets all values', () => {
+            const scoreLogic = new ScoreLogic();
+            const eventBus = new EventBus();
+            const adapter = new ScoreAdapter(scoreLogic, eventBus);
+            
+            // Set some values
+            adapter.currentScore = 1000;
+            adapter.currentCombo = 3;
+            adapter.pendingMultiplier = 2;
+            
+            adapter.resetScore();
+            
+            Assert.equals(adapter.currentScore, 0, 'Score should reset to 0');
+            Assert.equals(adapter.currentCombo, 0, 'Combo should reset to 0');
+            Assert.equals(adapter.pendingMultiplier, 1, 'Multiplier should reset to 1');
+        });
+        
+        // Test 9: Long word scoring
+        test('ScoreAdapter handles long words correctly', () => {
+            const scoreLogic = new ScoreLogic();
+            const eventBus = new EventBus();
+            const adapter = new ScoreAdapter(scoreLogic, eventBus);
+            
+            let scoreEvent = null;
+            eventBus.on(EventTypes.SCORE_CHANGED, (data) => {
+                scoreEvent = data;
+            });
+            
+            // AMAZING (7 letters)
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'AMAZING',
+                score: 19, // Required field
+                tiles: [
+                    { x: 0, y: 0, letter: 'A', value: 1 },
+                    { x: 1, y: 0, letter: 'M', value: 3 },
+                    { x: 2, y: 0, letter: 'A', value: 1 },
+                    { x: 3, y: 0, letter: 'Z', value: 10 },
+                    { x: 4, y: 0, letter: 'I', value: 1 },
+                    { x: 5, y: 0, letter: 'N', value: 1 },
+                    { x: 6, y: 0, letter: 'G', value: 2 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Base: 19, Length bonus: 10 + (4 * 5) = 30, Total: 49
+            Assert.equals(scoreEvent.delta, 49, 'Long word should score correctly');
+        });
+        
+        // Test 10: Complex multiplier and combo interaction
+        test('ScoreAdapter handles multiplier with combo correctly', () => {
+            const scoreLogic = new ScoreLogic();
+            const eventBus = new EventBus();
+            const adapter = new ScoreAdapter(scoreLogic, eventBus);
+            
+            let scoreEvents = [];
+            eventBus.on(EventTypes.SCORE_CHANGED, (data) => {
+                scoreEvents.push(data);
+            });
+            
+            // First word to build combo
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'CAT',
+                score: 5, // Required field
+                tiles: [
+                    { x: 0, y: 0, letter: 'C', value: 3 },
+                    { x: 1, y: 0, letter: 'A', value: 1 },
+                    { x: 2, y: 0, letter: 'T', value: 1 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Activate multiplier
+            eventBus.emit(EventTypes.MULTIPLIER_ACTIVATED, {
+                x: 5,
+                y: 5,
+                multiplier: 2,
+                wordScore: 0 // Must be a number
+            });
+            
+            // Second word with combo 1 (1.5x) and pending multiplier (2x)
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'DOG',
+                score: 5, // Required field
+                tiles: [
+                    { x: 0, y: 1, letter: 'D', value: 2 },
+                    { x: 1, y: 1, letter: 'O', value: 1 },
+                    { x: 2, y: 1, letter: 'G', value: 2 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Base: 5, Bonus: 10, Total: 15
+            // With combo 1 (1.5x) and multiplier 2x: 15 * 1.5 * 2 = 45
+            Assert.equals(scoreEvents[1].delta, 45, 'Should apply both combo and multiplier');
+        });
+    </script>
+</body>
+</html>
