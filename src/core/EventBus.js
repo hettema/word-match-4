@@ -9,6 +9,9 @@ class EventBus extends EventTarget {
         this.enableLogging = true;
         this.enableContractValidation = true; // v3.1 - Can disable in production
         this.recordEvents = true; // v3.1 - For replay debugging
+        this.maxEventLogSize = 1000; // v3.1 - Prevent memory bloat
+        this.maxEventLogMemory = 10 * 1024 * 1024; // 10MB limit
+        this._eventLogMemoryUsage = 0;
     }
     
     emit(type, data) {
@@ -29,12 +32,40 @@ class EventBus extends EventTarget {
         
         // v3.1 - Enhanced event recording for replay
         if (this.recordEvents) {
-            this._eventLog.push({ 
-                type, 
-                data: JSON.parse(JSON.stringify(data)), // Deep clone
-                timestamp: Date.now(),
-                stackTrace: new Error().stack // For debugging
-            });
+            try {
+                const clonedData = JSON.parse(JSON.stringify(data)); // Deep clone
+                const eventRecord = { 
+                    type, 
+                    data: clonedData,
+                    timestamp: Date.now(),
+                    stackTrace: new Error().stack // For debugging
+                };
+                
+                // Estimate memory usage (rough approximation)
+                const eventSize = JSON.stringify(eventRecord).length * 2; // 2 bytes per char
+                
+                // Check memory limits
+                if (this._eventLogMemoryUsage + eventSize > this.maxEventLogMemory) {
+                    // Remove oldest events until we have space
+                    while (this._eventLog.length > 0 && this._eventLogMemoryUsage + eventSize > this.maxEventLogMemory) {
+                        const removed = this._eventLog.shift();
+                        this._eventLogMemoryUsage -= JSON.stringify(removed).length * 2;
+                    }
+                    console.warn('[EVENT REPLAY] Memory limit reached, removed oldest events');
+                }
+                
+                // Check size limit
+                if (this._eventLog.length >= this.maxEventLogSize) {
+                    const removed = this._eventLog.shift();
+                    this._eventLogMemoryUsage -= JSON.stringify(removed).length * 2;
+                }
+                
+                this._eventLog.push(eventRecord);
+                this._eventLogMemoryUsage += eventSize;
+            } catch (error) {
+                // Handle circular references gracefully
+                console.warn(`[EVENT REPLAY] Failed to record event ${type}:`, error.message);
+            }
         }
         
         // Notify wildcard handlers first (for ice cubes tests)
@@ -72,35 +103,101 @@ class EventBus extends EventTarget {
     }
     
     // v3.1 - Event replay for debugging
-    replay(fromTimestamp = 0, toTimestamp = Date.now(), speed = 1) {
+    replay(fromTimestamp = 0, toTimestamp = Date.now(), speed = 1, options = {}) {
         const events = this._eventLog.filter(e => 
             e.timestamp >= fromTimestamp && e.timestamp <= toTimestamp
         );
         
-        console.log(`Replaying ${events.length} events...`);
+        if (events.length === 0) {
+            console.log('[EVENT REPLAY] No events found in specified time range');
+            return;
+        }
+        
+        const startTime = events[0]?.timestamp || Date.now();
+        const endTime = events[events.length - 1]?.timestamp || Date.now();
+        const duration = endTime - startTime;
+        
+        console.log('╔════════════════════════════════════════════════════════════════');
+        console.log(`║ EVENT REPLAY: ${events.length} events over ${duration}ms`);
+        console.log(`║ Speed: ${speed}x | From: ${new Date(fromTimestamp).toISOString()}`);
+        console.log(`║ To: ${new Date(toTimestamp).toISOString()}`);
+        console.log('╚════════════════════════════════════════════════════════════════');
+        
+        let cumulativeDelay = 0;
         
         events.forEach((event, index) => {
             const delay = index === 0 ? 0 : 
                 (event.timestamp - events[index - 1].timestamp) / speed;
+            cumulativeDelay += delay;
             
             setTimeout(() => {
-                console.log(`[REPLAY] ${event.type}:`, event.data);
-                this.emit(event.type, event.data);
-            }, delay);
+                const relativeTime = event.timestamp - startTime;
+                console.log(`[REPLAY ${index + 1}/${events.length}] +${relativeTime}ms ${event.type}:`, event.data);
+                
+                // Temporarily disable recording during replay to avoid duplication
+                const originalRecordState = this.recordEvents;
+                this.recordEvents = false;
+                
+                try {
+                    this.emit(event.type, event.data);
+                } finally {
+                    this.recordEvents = originalRecordState;
+                }
+                
+                if (index === events.length - 1) {
+                    console.log('╚════════════════════════ REPLAY COMPLETE ══════════════════════╝');
+                }
+            }, cumulativeDelay);
         });
     }
     
     // v3.1 - Get event log for analysis
-    getEventLog(eventType = null) {
+    getEventLog(eventType = null, options = {}) {
+        let events = [...this._eventLog];
+        
+        // Filter by event type
         if (eventType) {
-            return this._eventLog.filter(e => e.type === eventType);
+            events = events.filter(e => e.type === eventType);
         }
-        return [...this._eventLog];
+        
+        // Additional filtering options
+        if (options.fromTimestamp) {
+            events = events.filter(e => e.timestamp >= options.fromTimestamp);
+        }
+        if (options.toTimestamp) {
+            events = events.filter(e => e.timestamp <= options.toTimestamp);
+        }
+        if (options.limit) {
+            events = events.slice(-options.limit);
+        }
+        
+        return events;
     }
     
     // v3.1 - Clear event log
     clearEventLog() {
         this._eventLog = [];
+        this._eventLogMemoryUsage = 0;
+        console.log('[EVENT REPLAY] Event log cleared');
+    }
+    
+    // v3.1 - Get event log statistics
+    getEventLogStats() {
+        const stats = {
+            totalEvents: this._eventLog.length,
+            memoryUsage: this._eventLogMemoryUsage,
+            memoryUsageMB: (this._eventLogMemoryUsage / (1024 * 1024)).toFixed(2),
+            oldestEvent: this._eventLog[0]?.timestamp,
+            newestEvent: this._eventLog[this._eventLog.length - 1]?.timestamp,
+            eventTypes: {}
+        };
+        
+        // Count events by type
+        this._eventLog.forEach(event => {
+            stats.eventTypes[event.type] = (stats.eventTypes[event.type] || 0) + 1;
+        });
+        
+        return stats;
     }
 }
 

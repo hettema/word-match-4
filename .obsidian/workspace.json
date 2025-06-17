@@ -94,7 +94,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "todo/05b-TESTING-02b-integration-dashboard.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +103,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 05b-TESTING-02b-integration-dashboard"
+              "title": "Backlinks"
             }
           },
           {
@@ -113,12 +112,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "todo/05b-TESTING-02b-integration-dashboard.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 05b-TESTING-02b-integration-dashboard"
+              "title": "Outgoing links"
             }
           },
           {
@@ -142,13 +140,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "todo/05b-TESTING-02b-integration-dashboard.md",
+                "file": "todo/03b-FOUNDATION-03b-event-replay-debug.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 05b-TESTING-02b-integration-dashboard"
+              "title": "Outline of 03b-FOUNDATION-03b-event-replay-debug"
             }
           }
         ]
@@ -168,12 +166,13 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "92dff61709883541",
+  "active": "03598af561348156",
   "lastOpenFiles": [
+    "done/03b-FOUNDATION-03b-event-replay-debug.md",
+    "todo/05b-TESTING-02b-integration-dashboard.md",
     "done/03a-FOUNDATION-03a-contract-validation.md",
     "todo/03-FOUNDATION-03-event-bus.md",
     "done/03-FOUNDATION-03-event-bus.md",
-    "todo/05b-TESTING-02b-integration-dashboard.md",
     "todo/05a-TESTING-02a-automated-test-runner.md",
     "src/core/EventBus.js",
     "todo/05-TESTING-02-ice-cubes-test.md",
@@ -205,7 +204,6 @@
     "node_modules/minimist/README.md",
     "node_modules/math-intrinsics/README.md",
     "node_modules/math-intrinsics/CHANGELOG.md",
-    "node_modules/http-proxy/README.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]
