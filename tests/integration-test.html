@@ -178,6 +178,7 @@
             <button onclick="testGridLogic()">Test GridLogic (Pure)</button>
             <button onclick="testWordValidator()">Test WordValidator (Pure)</button>
             <button onclick="testGameLogic()">Test GameLogic (Pure)</button>
+            <button onclick="testScoreLogic()">Test ScoreLogic (Pure)</button>
         </div>
         
         <div class="button-group">
@@ -430,6 +431,53 @@
                     <div class="event-type" style="color: #27ae60;">PURE MODULE TEST: GameLogic</div>
                     <div class="event-data">RESULT: ${JSON.stringify(testResult.result, null, 2)}</div>
                     <div style="color: #27ae60; margin-top: 10px;">✓ GameLogic is a pure module - no events emitted</div>
+                `;
+                
+                if (output.textContent === 'Waiting for events...') {
+                    output.textContent = '';
+                }
+                output.appendChild(logEntry);
+                output.scrollTop = output.scrollHeight;
+            });
+        };
+        
+        window.testScoreLogic = function() {
+            // Import dynamically to test
+            import('../src/core/ScoreLogic.js').then(module => {
+                const { ScoreLogic } = module;
+                const scorer = new ScoreLogic();
+                
+                // Test basic operations
+                const tiles = [
+                    { letter: 'C', value: 3 },
+                    { letter: 'A', value: 1 },
+                    { letter: 'T', value: 1 }
+                ];
+                const baseScore = scorer.calculateBaseScore(tiles);
+                const wordScore = scorer.calculateWordScore(tiles, 1, 2);
+                
+                // Log a non-event to show this is pure
+                const testResult = {
+                    type: 'PURE_MODULE_TEST',
+                    module: 'ScoreLogic',
+                    result: {
+                        letterValuesLoaded: scorer.getLetterValue('A') === 1,
+                        baseScoreCalculated: baseScore === 5,
+                        bonusesApplied: wordScore > baseScore,
+                        scoreCalculated: wordScore === 45, // (5+10)*1.5*2
+                        noEventsEmitted: true,
+                        pureFunction: true
+                    }
+                };
+                
+                const logEntry = document.createElement('div');
+                logEntry.className = 'event-entry';
+                logEntry.style.borderColor = '#27ae60';
+                logEntry.innerHTML = `
+                    <div class="timestamp">${new Date().toISOString()}</div>
+                    <div class="event-type" style="color: #27ae60;">PURE MODULE TEST: ScoreLogic</div>
+                    <div class="event-data">RESULT: ${JSON.stringify(testResult.result, null, 2)}</div>
+                    <div style="color: #27ae60; margin-top: 10px;">✓ ScoreLogic is a pure module - no events emitted</div>
                 `;
                 
                 if (output.textContent === 'Waiting for events...') {

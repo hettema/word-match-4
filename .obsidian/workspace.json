@@ -11,14 +11,10 @@
             "id": "92dff61709883541",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "todo/10-CORE-04-score-logic.md",
-                "mode": "preview",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "10-CORE-04-score-logic"
+              "title": "New tab"
             }
           }
         ]
@@ -94,7 +90,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "todo/10-CORE-04-score-logic.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +99,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 10-CORE-04-score-logic"
+              "title": "Backlinks"
             }
           },
           {
@@ -113,12 +108,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "todo/10-CORE-04-score-logic.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 10-CORE-04-score-logic"
+              "title": "Outgoing links"
             }
           },
           {
@@ -142,13 +136,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "todo/10-CORE-04-score-logic.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 10-CORE-04-score-logic"
+              "title": "Outline"
             }
           }
         ]
@@ -170,6 +163,10 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "todo/10-CORE-04-score-logic.md",
+    "done/10-CORE-04-score-logic.md",
+    "tests/score-logic.test.html",
+    "src/core/ScoreLogic.js",
     "done/09-CORE-03-game-logic.md",
     "tests/game-logic.test.html",
     "src/core/GameLogic.js",
@@ -184,7 +181,6 @@
     "done/06a-TESTING-00-visual-stub-temp.md",
     "visual-stub.js",
     "done/06-FOUNDATION-04-game-bootstrap.md",
-    "todo/10-CORE-04-score-logic.md",
     "todo/06a-TESTING-00-visual-stub.md",
     "todo/09-CORE-03-game-logic.md",
     "todo/08-CORE-02-word-validator.md",
@@ -198,14 +194,11 @@
     "todo/14-SYSTEMS-03-game-adapter.md",
     "todo/13-SYSTEMS-02-word-validator-adapter.md",
     "todo/12-SYSTEMS-01-grid-adapter.md",
-    "tests/integration-tester.js",
     "done/03a-FOUNDATION-03a-contract-validation.md",
     "todo/05-TESTING-02-ice-cubes-test.md",
     "done/05-TESTING-02-ice-cubes-test.md",
     "tests/ice-cubes/README.md",
-    "tests/ice-cubes/contract-validator.js",
     "done/05a-TESTING-02a-automated-test-runner.md",
-    "CLAUDE.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]

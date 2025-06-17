@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ScoreLogic Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .pass { color: green; }
+        .fail { color: red; }
+        .summary { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>ScoreLogic Tests</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        import { ScoreLogic } from '../src/core/ScoreLogic.js';
+        
+        const results = document.getElementById('results');
+        let passed = 0;
+        let failed = 0;
+        
+        function assert(condition, message) {
+            const div = document.createElement('div');
+            if (condition) {
+                div.className = 'pass';
+                div.textContent = '✓ ' + message;
+                passed++;
+            } else {
+                div.className = 'fail';
+                div.textContent = '✗ ' + message;
+                failed++;
+            }
+            results.appendChild(div);
+            console.log(div.textContent);
+        }
+        
+        function runTests() {
+            console.log('=== ScoreLogic Tests Starting ===');
+            
+            const scorer = new ScoreLogic();
+            
+            // Test 1: Letter values
+            assert(scorer.getLetterValue('A') === 1, 'Letter A has value 1');
+            assert(scorer.getLetterValue('Q') === 10, 'Letter Q has value 10');
+            assert(scorer.getLetterValue('z') === 10, 'Letter z (lowercase) has value 10');
+            assert(scorer.getLetterValue('?') === 0, 'Invalid letter has value 0');
+            
+            // Test 2: Base score calculation
+            const tiles1 = [
+                { letter: 'C', value: 3 },
+                { letter: 'A', value: 1 },
+                { letter: 'T', value: 1 }
+            ];
+            assert(scorer.calculateBaseScore(tiles1) === 5, 'CAT base score is 5');
+            
+            // Test 3: Empty/invalid tiles
+            assert(scorer.calculateBaseScore([]) === 0, 'Empty tiles score 0');
+            assert(scorer.calculateBaseScore(null) === 0, 'Null tiles score 0');
+            assert(scorer.calculateBaseScore([{ letter: '' }]) === 0, 'Empty letter scores 0');
+            
+            // Test 4: Word length bonus
+            assert(scorer.calculateWordLengthBonus(2) === 0, 'No bonus for 2 letters');
+            assert(scorer.calculateWordLengthBonus(3) === 10, '3 letters gets base bonus');
+            assert(scorer.calculateWordLengthBonus(4) === 15, '4 letters gets base + 5');
+            assert(scorer.calculateWordLengthBonus(5) === 20, '5 letters gets base + 10');
+            
+            // Test 5: Chain multiplier
+            assert(scorer.calculateChainMultiplier(0) === 1, 'No chain = 1x multiplier');
+            assert(scorer.calculateChainMultiplier(1) === 1.5, 'Chain 1 = 1.5x');
+            assert(scorer.calculateChainMultiplier(2) === 2.0, 'Chain 2 = 2x');
+            assert(scorer.calculateChainMultiplier(3) === 2.5, 'Chain 3 = 2.5x');
+            
+            // Test 6: Total score calculation
+            const result1 = scorer.calculateTotalScore(5, 3, 0, 1);
+            assert(result1.total === 15, 'Base 5 + length 10 = 15 total');
+            assert(result1.lengthBonus === 10, 'Length bonus correct');
+            
+            // Test 7: With chain multiplier
+            const result2 = scorer.calculateTotalScore(5, 3, 1, 1);
+            assert(result2.total === 22, '(5 + 10) * 1.5 = 22.5 -> 22');
+            assert(result2.chainMultiplier === 1.5, 'Chain multiplier correct');
+            
+            // Test 8: With special multiplier
+            const result3 = scorer.calculateTotalScore(5, 3, 0, 2);
+            assert(result3.total === 30, '(5 + 10) * 2 = 30');
+            assert(result3.specialMultiplier === 2, 'Special multiplier correct');
+            
+            // Test 9: Combined multipliers
+            const result4 = scorer.calculateTotalScore(10, 4, 2, 3);
+            // (10 base + 15 length) * 2 chain * 3 special = 150
+            assert(result4.total === 150, 'Combined multipliers calculate correctly');
+            
+            // Test 10: Word score helper
+            const tiles2 = [
+                { letter: 'Q', value: 10 },
+                { letter: 'U', value: 1 },
+                { letter: 'I', value: 1 },
+                { letter: 'Z', value: 10 }
+            ];
+            const wordScore = scorer.calculateWordScore(tiles2, 1, 1);
+            // Base: 22, Length bonus: 15, Total: (22+15) * 1.5 = 55.5 -> 55
+            assert(wordScore === 55, 'QUIZ word score calculated correctly');
+            
+            // Test 11: Negative inputs
+            const badResult = scorer.calculateTotalScore(-5, -3, -1, -2);
+            assert(badResult === 0, 'Negative inputs return 0');
+            
+            // Test 12: Score breakdown
+            const breakdown = scorer.calculateTotalScore(20, 5, 2, 2);
+            assert(breakdown.breakdown.base === 20, 'Breakdown shows base score');
+            assert(breakdown.breakdown.lengthBonus === 20, 'Breakdown shows length bonus');
+            assert(breakdown.breakdown.chainBonus === 'x2', 'Breakdown shows chain bonus');
+            assert(breakdown.breakdown.specialBonus === 'x2', 'Breakdown shows special bonus');
+            assert(breakdown.breakdown.final === 160, 'Breakdown shows final score');
+            
+            // Summary
+            const summary = document.createElement('div');
+            summary.className = 'summary';
+            summary.textContent = `Tests complete: ${passed} passed, ${failed} failed`;
+            results.appendChild(summary);
+            
+            console.log(`\n=== Test Summary: ${passed} passed, ${failed} failed ===`);
+        }
+        
+        runTests();
+    </script>
+</body>
+</html>
