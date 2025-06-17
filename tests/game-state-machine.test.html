@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameStateMachine Tests</title>
+</head>
+<body>
+    <h1>GameStateMachine Tests</h1>
+    <div id="test-results"></div>
+    
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { GameStateMachine } from '../src/core/GameStateMachine.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+        
+        // Test 1: Initial state
+        test('GameStateMachine initializes with INITIALIZING state', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            Assert.equals(stateMachine.getCurrentState(), 'INITIALIZING', 'Initial state should be INITIALIZING');
+        });
+        
+        // Test 2: Valid transitions
+        test('GameStateMachine allows valid transitions', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            // INITIALIZING → PLAYING is valid
+            const result = stateMachine.transitionTo('PLAYING');
+            Assert.equals(result, true, 'Should allow transition from INITIALIZING to PLAYING');
+            Assert.equals(stateMachine.getCurrentState(), 'PLAYING', 'State should be PLAYING');
+        });
+        
+        // Test 3: Invalid transitions
+        test('GameStateMachine prevents invalid transitions', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            // INITIALIZING → VICTORY is invalid
+            const result = stateMachine.transitionTo('VICTORY');
+            Assert.equals(result, false, 'Should prevent transition from INITIALIZING to VICTORY');
+            Assert.equals(stateMachine.getCurrentState(), 'INITIALIZING', 'State should remain INITIALIZING');
+        });
+        
+        // Test 4: Event-triggered transitions
+        test('GameStateMachine responds to GAME_START event', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            // Emit GAME_START event
+            eventBus.emit(EventTypes.GAME_START, { level: 1, timestamp: Date.now() });
+            
+            Assert.equals(stateMachine.getCurrentState(), 'PLAYING', 'State should transition to PLAYING on GAME_START');
+        });
+        
+        // Test 5: Victory flow
+        test('GameStateMachine handles victory flow', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            // Start game
+            eventBus.emit(EventTypes.GAME_START, { level: 1, timestamp: Date.now() });
+            Assert.equals(stateMachine.getCurrentState(), 'PLAYING', 'Should be in PLAYING state');
+            
+            // Trigger victory
+            eventBus.emit(EventTypes.VICTORY, { score: 1000, movesUsed: 10, timeElapsed: 60000, timestamp: Date.now() });
+            Assert.equals(stateMachine.getCurrentState(), 'VICTORY', 'Should transition to VICTORY');
+        });
+        
+        // Test 6: Defeat flow
+        test('GameStateMachine handles defeat flow', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            // Start game
+            eventBus.emit(EventTypes.GAME_START, { level: 1, timestamp: Date.now() });
+            eventBus.emit(EventTypes.DEFEAT, { score: 500, movesUsed: 20, reason: 'no_moves', timestamp: Date.now() });
+            
+            Assert.equals(stateMachine.getCurrentState(), 'DEFEAT', 'Should transition to DEFEAT');
+        });
+        
+        // Test 7: Animation state flow
+        test('GameStateMachine handles animation states', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            // Start game
+            eventBus.emit(EventTypes.GAME_START, { level: 1, timestamp: Date.now() });
+            
+            // Start animation
+            eventBus.emit(EventTypes.ANIMATION_STARTED, { type: 'explosion', target: {}, duration: 300, timestamp: Date.now() });
+            Assert.equals(stateMachine.getCurrentState(), 'ANIMATING', 'Should transition to ANIMATING');
+            
+            // Complete animation
+            eventBus.emit(EventTypes.ANIMATION_COMPLETE, { type: 'explosion', target: {}, timestamp: Date.now() });
+            Assert.equals(stateMachine.getCurrentState(), 'PLAYING', 'Should return to PLAYING');
+        });
+        
+        // Test 8: State change events
+        test('GameStateMachine emits STATE_CHANGED events', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            let stateChangeData = null;
+            eventBus.on(EventTypes.STATE_CHANGED, (data) => {
+                stateChangeData = data;
+            });
+            
+            // Trigger state change
+            stateMachine.transitionTo('PLAYING');
+            
+            Assert.equals(stateChangeData !== null, true, 'STATE_CHANGED event should be emitted');
+            Assert.equals(stateChangeData.from, 'INITIALIZING', 'Should have correct from state');
+            Assert.equals(stateChangeData.to, 'PLAYING', 'Should have correct to state');
+            Assert.equals(typeof stateChangeData.timestamp, 'number', 'Should have timestamp');
+        });
+        
+        // Test 9: canAcceptInput method
+        test('GameStateMachine canAcceptInput returns true only in PLAYING state', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            // Initial state
+            Assert.equals(stateMachine.canAcceptInput(), false, 'Should not accept input in INITIALIZING');
+            
+            // Playing state
+            stateMachine.transitionTo('PLAYING');
+            Assert.equals(stateMachine.canAcceptInput(), true, 'Should accept input in PLAYING');
+            
+            // Animating state
+            eventBus.emit(EventTypes.ANIMATION_STARTED, { type: 'test', target: {}, duration: 100, timestamp: Date.now() });
+            Assert.equals(stateMachine.canAcceptInput(), false, 'Should not accept input in ANIMATING');
+        });
+        
+        // Test 10: canTransitionTo method
+        test('GameStateMachine canTransitionTo validates transitions', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            // From INITIALIZING
+            Assert.equals(stateMachine.canTransitionTo('PLAYING'), true, 'Can transition to PLAYING from INITIALIZING');
+            Assert.equals(stateMachine.canTransitionTo('VICTORY'), false, 'Cannot transition to VICTORY from INITIALIZING');
+            
+            // From PLAYING
+            stateMachine.transitionTo('PLAYING');
+            Assert.equals(stateMachine.canTransitionTo('ANIMATING'), true, 'Can transition to ANIMATING from PLAYING');
+            Assert.equals(stateMachine.canTransitionTo('VICTORY'), true, 'Can transition to VICTORY from PLAYING');
+            Assert.equals(stateMachine.canTransitionTo('DEFEAT'), true, 'Can transition to DEFEAT from PLAYING');
+            Assert.equals(stateMachine.canTransitionTo('INITIALIZING'), false, 'Cannot transition to INITIALIZING from PLAYING');
+        });
+        
+        // Test 11: Reset functionality
+        test('GameStateMachine reset returns to INITIALIZING', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            // Move to PLAYING state
+            stateMachine.transitionTo('PLAYING');
+            Assert.equals(stateMachine.getCurrentState(), 'PLAYING', 'Should be in PLAYING state');
+            
+            // Reset
+            stateMachine.reset();
+            Assert.equals(stateMachine.getCurrentState(), 'INITIALIZING', 'Should return to INITIALIZING after reset');
+        });
+        
+        // Test 12: Complete game flow
+        test('GameStateMachine handles complete game flow', () => {
+            const eventBus = new EventBus();
+            const stateMachine = new GameStateMachine(eventBus);
+            
+            // Full game flow: INITIALIZING → PLAYING → ANIMATING → PLAYING → VICTORY → TRANSITIONING
+            Assert.equals(stateMachine.getCurrentState(), 'INITIALIZING', 'Start in INITIALIZING');
+            
+            eventBus.emit(EventTypes.GAME_START, { level: 1, timestamp: Date.now() });
+            Assert.equals(stateMachine.getCurrentState(), 'PLAYING', 'Move to PLAYING');
+            
+            eventBus.emit(EventTypes.ANIMATION_STARTED, { type: 'test', target: {}, duration: 100, timestamp: Date.now() });
+            Assert.equals(stateMachine.getCurrentState(), 'ANIMATING', 'Move to ANIMATING');
+            
+            eventBus.emit(EventTypes.ANIMATION_COMPLETE, { type: 'test', target: {}, timestamp: Date.now() });
+            Assert.equals(stateMachine.getCurrentState(), 'PLAYING', 'Return to PLAYING');
+            
+            eventBus.emit(EventTypes.VICTORY, { score: 1000, movesUsed: 15, timeElapsed: 90000, timestamp: Date.now() });
+            Assert.equals(stateMachine.getCurrentState(), 'VICTORY', 'Move to VICTORY');
+            
+            stateMachine.transitionTo('TRANSITIONING');
+            Assert.equals(stateMachine.getCurrentState(), 'TRANSITIONING', 'Move to TRANSITIONING');
+            
+            stateMachine.transitionTo('INITIALIZING');
+            Assert.equals(stateMachine.getCurrentState(), 'INITIALIZING', 'Return to INITIALIZING for next level');
+        });
+    </script>
+</body>
+</html>

@@ -163,6 +163,9 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "done/11-CORE-05-game-state-machine.md",
+    "tests/game-state-machine.test.html",
+    "src/core/GameStateMachine.js",
     "todo/10-CORE-04-score-logic.md",
     "done/10-CORE-04-score-logic.md",
     "tests/score-logic.test.html",
@@ -176,10 +179,8 @@
     "done/07-CORE-01-grid-logic.md",
     "tests/grid-logic-ice-cubes.html",
     "tests/grid-logic.test.html",
-    "src/core/GridLogic.js",
     "todo/06a-TESTING-00-visual-stub-temp.md",
     "done/06a-TESTING-00-visual-stub-temp.md",
-    "visual-stub.js",
     "done/06-FOUNDATION-04-game-bootstrap.md",
     "todo/06a-TESTING-00-visual-stub.md",
     "todo/09-CORE-03-game-logic.md",
@@ -198,7 +199,6 @@
     "todo/05-TESTING-02-ice-cubes-test.md",
     "done/05-TESTING-02-ice-cubes-test.md",
     "tests/ice-cubes/README.md",
-    "done/05a-TESTING-02a-automated-test-runner.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]

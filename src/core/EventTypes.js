@@ -41,7 +41,8 @@ export const EventTypes = {
   VICTORY: 'VICTORY',
   DEFEAT: 'DEFEAT',
   LEVEL_LOADED: 'LEVEL_LOADED',
-  DICTIONARY_LOADED: 'DICTIONARY_LOADED' // Added for async clarity
+  DICTIONARY_LOADED: 'DICTIONARY_LOADED', // Added for async clarity
+  STATE_CHANGED: 'STATE_CHANGED' // For GameStateMachine
 };
 
 // Event Data Contracts - MUST MATCH EXACTLY
@@ -73,7 +74,8 @@ export const EventContracts = {
   GAME_START: { level: 'number', timestamp: 'number' },
   VICTORY: { score: 'number', movesUsed: 'number', timeElapsed: 'number', timestamp: 'number' },
   DEFEAT: { score: 'number', movesUsed: 'number', reason: 'string', timestamp: 'number' },
-  LEVEL_LOADED: { levelId: 'number', config: 'object', timestamp: 'number' }
+  LEVEL_LOADED: { levelId: 'number', config: 'object', timestamp: 'number' },
+  STATE_CHANGED: { from: 'string', to: 'string', timestamp: 'number' }
 };
 
 // Contract Validation Function - v3.1 Addition (Enhanced)
