@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GridLogic Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .pass { color: green; }
+        .fail { color: red; }
+        .summary { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>GridLogic Tests</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        import { GridLogic } from '../src/core/GridLogic.js';
+        
+        const results = document.getElementById('results');
+        let passed = 0;
+        let failed = 0;
+        
+        function assert(condition, message) {
+            const div = document.createElement('div');
+            if (condition) {
+                div.className = 'pass';
+                div.textContent = '✓ ' + message;
+                passed++;
+            } else {
+                div.className = 'fail';
+                div.textContent = '✗ ' + message;
+                failed++;
+            }
+            results.appendChild(div);
+            console.log(div.textContent);
+        }
+        
+        function runTests() {
+            console.log('=== GridLogic Tests Starting ===');
+            
+            // Test 1: Grid creation
+            const grid = new GridLogic(8, 8);
+            assert(grid.width === 8, 'Grid width is 8');
+            assert(grid.height === 8, 'Grid height is 8');
+            assert(grid.tiles.length === 8, 'Grid has 8 rows');
+            assert(grid.tiles[0].length === 8, 'Grid has 8 columns');
+            
+            // Test 2: Get/Set tile
+            const result = grid.setTile(3, 4, { letter: 'A', value: 1 });
+            assert(result.changed === true, 'setTile returns changed: true');
+            grid.updateGrid(result.grid);
+            
+            const tile = grid.getTile(3, 4);
+            assert(tile.letter === 'A', 'Tile letter is A');
+            assert(tile.value === 1, 'Tile value is 1');
+            
+            // Test 3: Remove tile
+            const removeResult = grid.removeTile(3, 4);
+            grid.updateGrid(removeResult.grid);
+            assert(grid.getTile(3, 4) === null, 'Tile removed successfully');
+            
+            // Test 4: Get neighbors
+            grid.setTile(4, 4, { letter: 'B', value: 2 });
+            const neighbors = grid.getNeighbors(4, 4);
+            assert(neighbors.length === 8, 'Center tile has 8 neighbors');
+            
+            const cornerNeighbors = grid.getNeighbors(0, 0);
+            assert(cornerNeighbors.length === 3, 'Corner tile has 3 neighbors');
+            
+            // Test 5: Gravity
+            const gravityGrid = new GridLogic(4, 4);
+            let gResult = gravityGrid.setTile(1, 0, { letter: 'X', value: 1 });
+            gravityGrid.updateGrid(gResult.grid);
+            gResult = gravityGrid.setTile(1, 2, { letter: 'Y', value: 1 });
+            gravityGrid.updateGrid(gResult.grid);
+            
+            const gravityResult = gravityGrid.applyGravity();
+            assert(gravityResult.changed === true, 'Gravity detected changes');
+            assert(gravityResult.tilesDropped.length === 2, 'Two tiles dropped');
+            
+            // Test 6: Is stable
+            assert(grid.isStable() === true, 'Empty grid is stable');
+            
+            // Test 7: Fill empty spaces
+            const fillResult = grid.fillEmptySpaces((x, y) => ({ 
+                letter: String.fromCharCode(65 + x), 
+                value: 1 
+            }));
+            assert(fillResult.changed === true, 'Fill detected changes');
+            assert(fillResult.newTiles.length > 0, 'New tiles were added');
+            
+            // Test 8: Find tiles
+            grid.updateGrid(fillResult.grid);
+            const aTiles = grid.findTiles((tile) => tile && tile.letter === 'A');
+            assert(aTiles.length > 0, 'Found tiles with letter A');
+            
+            // Test 9: Invalid positions
+            assert(grid.getTile(-1, 0) === null, 'Returns null for negative x');
+            assert(grid.getTile(0, -1) === null, 'Returns null for negative y');
+            assert(grid.getTile(10, 0) === null, 'Returns null for x out of bounds');
+            
+            // Test 10: Tile count
+            const count = grid.getTileCount();
+            assert(count === 64, 'Full grid has 64 tiles');
+            
+            // Summary
+            const summary = document.createElement('div');
+            summary.className = 'summary';
+            summary.textContent = `Tests complete: ${passed} passed, ${failed} failed`;
+            results.appendChild(summary);
+            
+            console.log(`\n=== Test Summary: ${passed} passed, ${failed} failed ===`);
+        }
+        
+        runTests();
+    </script>
+</body>
+</html>

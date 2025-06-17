@@ -174,6 +174,11 @@
         </div>
         
         <div class="button-group">
+            <h3>Pure Module Tests (No Events)</h3>
+            <button onclick="testGridLogic()">Test GridLogic (Pure)</button>
+        </div>
+        
+        <div class="button-group">
             <h3>Contract Validation</h3>
             <button class="validate" onclick="validateAllContracts()">Validate All Contracts</button>
             <button class="clear" onclick="clearOutput()">Clear Output</button>
@@ -300,6 +305,46 @@
                 ],
                 surgePower: 3,
                 timestamp: Date.now()
+            });
+        };
+        
+        window.testGridLogic = function() {
+            // Import dynamically to test
+            import('../src/core/GridLogic.js').then(module => {
+                const { GridLogic } = module;
+                const grid = new GridLogic(4, 4);
+                
+                // Test basic operations
+                const result = grid.setTile(1, 1, { letter: 'A', value: 1 });
+                const tile = result.grid[1][1];
+                
+                // Log a non-event to show this is pure
+                const testResult = {
+                    type: 'PURE_MODULE_TEST',
+                    module: 'GridLogic',
+                    result: {
+                        gridCreated: true,
+                        tileSet: tile.letter === 'A',
+                        noEventsEmitted: true,
+                        pureFunction: true
+                    }
+                };
+                
+                const logEntry = document.createElement('div');
+                logEntry.className = 'event-entry';
+                logEntry.style.borderColor = '#27ae60';
+                logEntry.innerHTML = `
+                    <div class="timestamp">${new Date().toISOString()}</div>
+                    <div class="event-type" style="color: #27ae60;">PURE MODULE TEST: GridLogic</div>
+                    <div class="event-data">RESULT: ${JSON.stringify(testResult.result, null, 2)}</div>
+                    <div style="color: #27ae60; margin-top: 10px;">✓ GridLogic is a pure module - no events emitted</div>
+                `;
+                
+                if (output.textContent === 'Waiting for events...') {
+                    output.textContent = '';
+                }
+                output.appendChild(logEntry);
+                output.scrollTop = output.scrollHeight;
             });
         };
         

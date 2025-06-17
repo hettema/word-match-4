@@ -170,6 +170,10 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "done/07-CORE-01-grid-logic.md",
+    "tests/grid-logic-ice-cubes.html",
+    "tests/grid-logic.test.html",
+    "src/core/GridLogic.js",
     "todo/06a-TESTING-00-visual-stub-temp.md",
     "done/06a-TESTING-00-visual-stub-temp.md",
     "visual-stub.js",
@@ -200,12 +204,8 @@
     "done/04-TESTING-01-test-infrastructure.md",
     "tests/README.md",
     "tests/event-bus.test.html",
-    "todo/04-TESTING-01-test-infrastructure.md",
     "tests/test-runner.js",
     "src/core/EventBus.js",
-    "src/core/EventTypes.js",
-    "package-lock.json",
-    "node_modules/async/package.json",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]
