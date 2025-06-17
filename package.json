@@ -1,0 +1,35 @@
+{
+  "name": "word-match-4",
+  "version": "1.0.0",
+  "description": "A browser-based puzzle game combining Scrabble-style word building with match-3 cascade mechanics",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 8080 -c-1",
+    "test": "npx http-server . -p 8081 -c-1 --silent & sleep 2 && open http://localhost:8081/tests/",
+    "dev": "npx http-server . -p 8080 -c-1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hettema/word-match-4.git"
+  },
+  "keywords": [
+    "game",
+    "puzzle",
+    "word",
+    "match-3",
+    "phaser",
+    "javascript"
+  ],
+  "author": "Dennis Hettema",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hettema/word-match-4/issues"
+  },
+  "homepage": "https://github.com/hettema/word-match-4#readme",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

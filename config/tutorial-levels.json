@@ -1,0 +1,25 @@
+{
+  "tutorialLevels": [
+    {
+      "id": "tutorial_1",
+      "name": "Basic Words",
+      "description": "Learn to trace words",
+      "gridSize": { "width": 5, "height": 5 },
+      "targetScore": 100,
+      "moveLimit": 10,
+      "presetGrid": [
+        ["C", "A", "T", "S", "O"],
+        ["O", "R", "E", "A", "N"],
+        ["D", "O", "G", "T", "D"],
+        ["E", "W", "S", "E", "S"],
+        ["S", "E", "T", "R", "Y"]
+      ],
+      "requiredWords": ["CAT", "DOG", "SET"],
+      "hints": [
+        "Trace connected letters to form words",
+        "Words must be at least 3 letters long",
+        "You can move in any direction"
+      ]
+    }
+  ]
+}
