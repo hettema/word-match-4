@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "todo/06a-TESTING-00-visual-stub-temp.md",
+                "file": "todo/10-CORE-04-score-logic.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "06a-TESTING-00-visual-stub-temp"
+              "title": "10-CORE-04-score-logic"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "todo/06a-TESTING-00-visual-stub-temp.md",
+                "file": "todo/10-CORE-04-score-logic.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 06a-TESTING-00-visual-stub-temp"
+              "title": "Backlinks for 10-CORE-04-score-logic"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "todo/06a-TESTING-00-visual-stub-temp.md",
+                "file": "todo/10-CORE-04-score-logic.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 06a-TESTING-00-visual-stub-temp"
+              "title": "Outgoing links from 10-CORE-04-score-logic"
             }
           },
           {
@@ -142,13 +142,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "todo/06a-TESTING-00-visual-stub-temp.md",
+                "file": "todo/10-CORE-04-score-logic.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 06a-TESTING-00-visual-stub-temp"
+              "title": "Outline of 10-CORE-04-score-logic"
             }
           }
         ]
@@ -170,9 +170,11 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "todo/06a-TESTING-00-visual-stub-temp.md",
+    "done/06a-TESTING-00-visual-stub-temp.md",
+    "visual-stub.js",
     "done/06-FOUNDATION-04-game-bootstrap.md",
     "todo/10-CORE-04-score-logic.md",
-    "todo/06a-TESTING-00-visual-stub-temp.md",
     "todo/06a-TESTING-00-visual-stub.md",
     "todo/09-CORE-03-game-logic.md",
     "todo/08-CORE-02-word-validator.md",
@@ -199,13 +201,11 @@
     "tests/README.md",
     "tests/event-bus.test.html",
     "todo/04-TESTING-01-test-infrastructure.md",
-    "todo/03b-FOUNDATION-03b-event-replay-debug.md",
     "tests/test-runner.js",
     "src/core/EventBus.js",
     "src/core/EventTypes.js",
     "package-lock.json",
     "node_modules/async/package.json",
-    "node_modules/async/bower.json",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]

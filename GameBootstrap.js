@@ -2,6 +2,11 @@
 import { EventBus } from './src/core/EventBus.js';
 import { EventTypes } from './src/core/EventTypes.js';
 
+// TEMPORARY: Load visual stub for early feedback
+const script = document.createElement('script');
+script.src = './visual-stub.js';
+document.head.appendChild(script);
+
 class GameBootstrap {
     constructor() {
         console.log('=== GAME BOOTSTRAP STARTING ===');
@@ -12,8 +17,11 @@ class GameBootstrap {
         // 2. Handle ALL async loading BEFORE creating systems
         this.loadResources().then(() => {
             this.initializeSystems();
-            this.initializePhaser();
-            this.startGame();
+            // TEMPORARY: Small delay to ensure visual stub is loaded
+            setTimeout(() => {
+                this.initializePhaser();
+                this.startGame();
+            }, 100);
         }).catch(error => {
             console.error('Bootstrap failed:', error);
             // Display error to user
@@ -93,14 +101,14 @@ class GameBootstrap {
             height: 600,
             parent: 'game-container',
             backgroundColor: '#0f0f1e',
-            // scene: GameScene, // Will be added when GameScene is implemented
-            scene: {
+            // TEMPORARY: Use visual stub scene
+            scene: window.VisualStubScene || {
                 preload: function() {
                     console.log('Phaser scene preload');
                 },
                 create: function() {
                     console.log('Phaser scene create');
-                    // Temporary placeholder scene
+                    // Fallback if visual stub not loaded
                     this.add.text(400, 300, 'GameBootstrap Loaded Successfully', {
                         fontSize: '24px',
                         color: '#4fbdba'
