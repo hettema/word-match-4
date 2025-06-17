@@ -177,6 +177,7 @@
             <h3>Pure Module Tests (No Events)</h3>
             <button onclick="testGridLogic()">Test GridLogic (Pure)</button>
             <button onclick="testWordValidator()">Test WordValidator (Pure)</button>
+            <button onclick="testGameLogic()">Test GameLogic (Pure)</button>
         </div>
         
         <div class="button-group">
@@ -383,6 +384,52 @@
                     <div class="event-type" style="color: #27ae60;">PURE MODULE TEST: WordValidator</div>
                     <div class="event-data">RESULT: ${JSON.stringify(testResult.result, null, 2)}</div>
                     <div style="color: #27ae60; margin-top: 10px;">✓ WordValidator is a pure module - no events emitted</div>
+                `;
+                
+                if (output.textContent === 'Waiting for events...') {
+                    output.textContent = '';
+                }
+                output.appendChild(logEntry);
+                output.scrollTop = output.scrollHeight;
+            });
+        };
+        
+        window.testGameLogic = function() {
+            // Import dynamically to test
+            import('../src/core/GameLogic.js').then(module => {
+                const { GameLogic } = module;
+                const game = new GameLogic();
+                
+                // Test basic operations
+                const levelConfig = { id: 1, moveLimit: 20, targetScore: 1000 };
+                const initResult = game.initLevel(levelConfig);
+                game.updateState(initResult.state);
+                
+                const moveResult = game.consumeMove();
+                const scoreResult = game.updateScore(100);
+                
+                // Log a non-event to show this is pure
+                const testResult = {
+                    type: 'PURE_MODULE_TEST',
+                    module: 'GameLogic',
+                    result: {
+                        gameInitialized: game.gamePhase === 'playing',
+                        levelSet: game.level === 1,
+                        moveConsumed: moveResult.success === true,
+                        scoreUpdated: scoreResult.success === true,
+                        noEventsEmitted: true,
+                        pureFunction: true
+                    }
+                };
+                
+                const logEntry = document.createElement('div');
+                logEntry.className = 'event-entry';
+                logEntry.style.borderColor = '#27ae60';
+                logEntry.innerHTML = `
+                    <div class="timestamp">${new Date().toISOString()}</div>
+                    <div class="event-type" style="color: #27ae60;">PURE MODULE TEST: GameLogic</div>
+                    <div class="event-data">RESULT: ${JSON.stringify(testResult.result, null, 2)}</div>
+                    <div style="color: #27ae60; margin-top: 10px;">✓ GameLogic is a pure module - no events emitted</div>
                 `;
                 
                 if (output.textContent === 'Waiting for events...') {

@@ -170,6 +170,9 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "done/09-CORE-03-game-logic.md",
+    "tests/game-logic.test.html",
+    "src/core/GameLogic.js",
     "done/08-CORE-02-word-validator.md",
     "tests/word-validator.test.html",
     "src/systems/WordValidator.js",
@@ -203,9 +206,6 @@
     "tests/ice-cubes/contract-validator.js",
     "done/05a-TESTING-02a-automated-test-runner.md",
     "CLAUDE.md",
-    "tests/integration-test.html",
-    "done/04-TESTING-01-test-infrastructure.md",
-    "tests/event-bus.test.html",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]

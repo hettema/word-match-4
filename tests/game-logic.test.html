@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GameLogic Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .pass { color: green; }
+        .fail { color: red; }
+        .summary { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>GameLogic Tests</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        import { GameLogic } from '../src/core/GameLogic.js';
+        
+        const results = document.getElementById('results');
+        let passed = 0;
+        let failed = 0;
+        
+        function assert(condition, message) {
+            const div = document.createElement('div');
+            if (condition) {
+                div.className = 'pass';
+                div.textContent = '✓ ' + message;
+                passed++;
+            } else {
+                div.className = 'fail';
+                div.textContent = '✗ ' + message;
+                failed++;
+            }
+            results.appendChild(div);
+            console.log(div.textContent);
+        }
+        
+        function runTests() {
+            console.log('=== GameLogic Tests Starting ===');
+            
+            // Test 1: Initialization
+            const game = new GameLogic();
+            assert(game.level === 1, 'Initial level is 1');
+            assert(game.score === 0, 'Initial score is 0');
+            assert(game.moves === 0, 'Initial moves is 0');
+            assert(game.gamePhase === 'waiting', 'Initial phase is waiting');
+            
+            // Test 2: Level initialization
+            const levelConfig = {
+                id: 2,
+                moveLimit: 25,
+                targetScore: 1500
+            };
+            const initResult = game.initLevel(levelConfig);
+            assert(initResult.success === true, 'Level init succeeds');
+            game.updateState(initResult.state);
+            assert(game.level === 2, 'Level updated to 2');
+            assert(game.movesLimit === 25, 'Moves limit updated to 25');
+            assert(game.targetScore === 1500, 'Target score updated to 1500');
+            assert(game.gamePhase === 'playing', 'Game phase changed to playing');
+            
+            // Test 3: Can make move
+            assert(game.canMakeMove() === true, 'Can make move when playing');
+            game.gamePhase = 'defeat';
+            assert(game.canMakeMove() === false, 'Cannot make move when defeated');
+            game.gamePhase = 'playing';
+            
+            // Test 4: Consume move
+            const moveResult = game.consumeMove();
+            assert(moveResult.success === true, 'Move consumed successfully');
+            game.updateState(moveResult.state);
+            assert(game.moves === 1, 'Moves incremented to 1');
+            assert(moveResult.movesRemaining === 24, 'Moves remaining is 24');
+            
+            // Test 5: Update score
+            const scoreResult = game.updateScore(100, 'word_match');
+            assert(scoreResult.success === true, 'Score updated successfully');
+            game.updateState(scoreResult.state);
+            assert(game.score === 100, 'Score updated to 100');
+            assert(scoreResult.progress === (100/1500)*100, 'Progress calculated correctly');
+            
+            // Test 6: Victory check (not yet)
+            const victoryCheck1 = game.checkVictory();
+            assert(victoryCheck1.isVictory === false, 'Not victory with low score');
+            
+            // Test 7: Victory check (achieved)
+            game.score = 1500;
+            const victoryCheck2 = game.checkVictory();
+            assert(victoryCheck2.isVictory === true, 'Victory when score >= target');
+            assert(victoryCheck2.stars >= 1, 'Stars calculated on victory');
+            
+            // Test 8: Defeat check (not yet)
+            game.score = 100;
+            game.moves = 10;
+            const defeatCheck1 = game.checkDefeat();
+            assert(defeatCheck1.isDefeat === false, 'Not defeat with moves remaining');
+            
+            // Test 9: Defeat check (achieved)
+            game.moves = 25;
+            const defeatCheck2 = game.checkDefeat();
+            assert(defeatCheck2.isDefeat === true, 'Defeat when no moves and score < target');
+            assert(defeatCheck2.scoreNeeded === 1400, 'Score needed calculated correctly');
+            
+            // Test 10: Set game phase
+            const phaseResult = game.setGamePhase('victory');
+            assert(phaseResult.success === true, 'Game phase set successfully');
+            assert(phaseResult.previousPhase === 'playing', 'Previous phase tracked');
+            
+            // Test 11: Invalid phase
+            const invalidPhase = game.setGamePhase('invalid');
+            assert(invalidPhase.success === false, 'Invalid phase rejected');
+            
+            // Test 12: Get game state
+            const state = game.getGameState();
+            assert(state.level === 2, 'State includes level');
+            assert(state.movesRemaining === 0, 'State includes moves remaining');
+            assert(typeof state.progress === 'number', 'State includes progress');
+            
+            // Test 13: Reset
+            const resetResult = game.reset();
+            const resetState = resetResult.state;
+            assert(resetState.level === 1, 'Reset returns to level 1');
+            assert(resetState.score === 0, 'Reset clears score');
+            assert(resetState.moves === 0, 'Reset clears moves');
+            
+            // Test 14: High score tracking
+            game.score = 2000;
+            game.highScore = 1800;
+            const highScoreResult = game.updateScore(500);
+            game.updateState(highScoreResult.state);
+            assert(game.highScore === 2500, 'High score updated');
+            
+            // Test 15: Star calculation
+            game.score = 3000;
+            game.targetScore = 1000;
+            game.moves = 5;
+            game.movesLimit = 20;
+            assert(game.calculateStars() === 3, 'Three stars for excellent performance');
+            
+            // Summary
+            const summary = document.createElement('div');
+            summary.className = 'summary';
+            summary.textContent = `Tests complete: ${passed} passed, ${failed} failed`;
+            results.appendChild(summary);
+            
+            console.log(`\n=== Test Summary: ${passed} passed, ${failed} failed ===`);
+        }
+        
+        runTests();
+    </script>
+</body>
+</html>
