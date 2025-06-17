@@ -2,11 +2,8 @@
 import { EventBus } from './src/core/EventBus.js';
 import { EventTypes } from './src/core/EventTypes.js';
 import { WordValidator } from './src/systems/WordValidator.js';
-
-// TEMPORARY: Load visual stub for early feedback
-const script = document.createElement('script');
-script.src = './visual-stub.js';
-document.head.appendChild(script);
+import { GameScene } from './src/engine/GameScene.js';
+import { GridLogic } from './src/core/GridLogic.js';
 
 class GameBootstrap {
     constructor() {
@@ -77,7 +74,7 @@ class GameBootstrap {
         // 3. Create pure logic modules (no async, no events)
         // Note: We'll create these as they're implemented
         // this.gameLogic = new GameLogic();
-        // this.gridLogic = new GridLogic(8, 8); // From config later
+        this.gridLogic = new GridLogic(8, 8); // From config later
         // this.scoreLogic = new ScoreLogic();
         
         // WordValidator is NOW pure - receives pre-loaded dictionary
@@ -102,30 +99,13 @@ class GameBootstrap {
             width: 800,
             height: 600,
             parent: 'game-container',
-            backgroundColor: '#0f0f1e',
-            // TEMPORARY: Use visual stub scene
-            scene: window.VisualStubScene || {
-                preload: function() {
-                    console.log('Phaser scene preload');
-                },
-                create: function() {
-                    console.log('Phaser scene create');
-                    // Fallback if visual stub not loaded
-                    this.add.text(400, 300, 'GameBootstrap Loaded Successfully', {
-                        fontSize: '24px',
-                        color: '#4fbdba'
-                    }).setOrigin(0.5);
-                    this.add.text(400, 340, 'Waiting for GameScene implementation...', {
-                        fontSize: '16px',
-                        color: '#888'
-                    }).setOrigin(0.5);
-                }
-            },
+            backgroundColor: '#2c3e50',
+            scene: GameScene,
             // Pass references via registry
             callbacks: {
                 preBoot: (game) => {
                     game.registry.set('eventBus', this.eventBus);
-                    // game.registry.set('gridLogic', this.gridLogic);
+                    game.registry.set('gridLogic', this.gridLogic);
                     // game.registry.set('gameLogic', this.gameLogic);
                 }
             }
