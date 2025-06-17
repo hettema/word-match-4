@@ -1,0 +1,5 @@
+# Workflow
+
+- In Arcitect mode: I want you help creating a game. The game design, also known as the Product Recuirements Document is in the prd-word-match.md file and a style guide is in the style-guide.md file and a Technical Design Document in the tdd-word-match.md file. Using the rules in the file kanban-rules.mb break down the game desing into a number of small well defined tasks. Place these cards, each in one file, in a folder named todo. The execution order of the cards are important. Testing should start as early as possible - right after the first task and continue through the entire project. In addition to tests you also need to run the game for real to make sure it works as expected at the given point in development. Also create an empty folder named done where we will put all completed tasks later.
+
+- In Code mode: Start working on the first card in the todo folder, first read the README.md file there for instructions.
