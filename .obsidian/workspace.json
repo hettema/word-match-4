@@ -170,6 +170,9 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "done/05a-TESTING-02a-automated-test-runner.md",
+    "CLAUDE.md",
+    "tests/integration-test.html",
     "done/04-TESTING-01-test-infrastructure.md",
     "tests/README.md",
     "tests/event-bus.test.html",
@@ -196,7 +199,6 @@
     "node_modules/async/bower.json",
     "node_modules/async/wrapSync.js",
     "node_modules/async/until.js",
-    "node_modules/async/whilst.js",
     "node_modules/iconv-lite/README.md",
     "node_modules/iconv-lite/Changelog.md",
     "node_modules/object-inspect/CHANGELOG.md",
@@ -204,8 +206,6 @@
     "node_modules/qs/README.md",
     "node_modules/qs/LICENSE.md",
     "node_modules/qs/CHANGELOG.md",
-    "node_modules/minimist/CHANGELOG.md",
-    "node_modules/minimist/README.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]
