@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventBus Tests</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Test Suite</a>
+        <h1>EventBus Tests</h1>
+        <div id="test-results"></div>
+    </div>
+
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+
+        // Test basic event emission and listening
+        test('EventBus should emit and receive events', () => {
+            const eventBus = new EventBus();
+            let received = false;
+            let receivedData = null;
+            
+            eventBus.on('TEST_EVENT', (data) => {
+                received = true;
+                receivedData = data;
+            });
+            
+            eventBus.emit('TEST_EVENT', { value: 42 });
+            
+            Assert.truthy(received, 'Event should be received');
+            Assert.deepEquals(receivedData, { value: 42 }, 'Event data should match');
+        });
+
+        // Test wildcard listeners for ice cubes testing
+        test('EventBus should support wildcard listeners', () => {
+            const eventBus = new EventBus();
+            const capturedEvents = [];
+            
+            eventBus.on('*', (type, data) => {
+                capturedEvents.push({ type, data });
+            });
+            
+            eventBus.emit('EVENT_ONE', { a: 1 });
+            eventBus.emit('EVENT_TWO', { b: 2 });
+            
+            Assert.equals(capturedEvents.length, 2, 'Should capture all events');
+            Assert.equals(capturedEvents[0].type, 'EVENT_ONE');
+            Assert.deepEquals(capturedEvents[0].data, { a: 1 });
+            Assert.equals(capturedEvents[1].type, 'EVENT_TWO');
+            Assert.deepEquals(capturedEvents[1].data, { b: 2 });
+        });
+
+        // Test event logging
+        test('EventBus should log events when enabled', () => {
+            const eventBus = new EventBus();
+            const originalLog = console.log;
+            let loggedMessage = null;
+            
+            console.log = (message) => {
+                if (message.includes('[EVENT]')) {
+                    loggedMessage = message;
+                }
+            };
+            
+            eventBus.enableLogging = true;
+            eventBus.emit('LOG_TEST', { test: true });
+            
+            console.log = originalLog;
+            
+            Assert.truthy(loggedMessage, 'Event should be logged');
+            Assert.truthy(loggedMessage.includes('LOG_TEST'), 'Log should contain event type');
+        });
+
+        // Test contract validation
+        test('EventBus should validate event contracts', () => {
+            const eventBus = new EventBus();
+            eventBus.enableContractValidation = true;
+            
+            // Valid event
+            Assert.throws(() => {
+                eventBus.emit(EventTypes.TILE_PRESSED, { x: 'not a number', y: 5 });
+            }, 'must be number', 'Should throw on invalid contract');
+            
+            // This should not throw
+            eventBus.emit(EventTypes.TILE_PRESSED, { x: 5, y: 10, timestamp: Date.now() });
+        });
+
+        // Test event recording for replay
+        test('EventBus should record events for replay', () => {
+            const eventBus = new EventBus();
+            eventBus.recordEvents = true;
+            
+            eventBus.emit('REPLAY_TEST', { value: 1 });
+            eventBus.emit('REPLAY_TEST', { value: 2 });
+            
+            const log = eventBus.getEventLog();
+            Assert.equals(log.length, 2, 'Should have recorded 2 events');
+            Assert.equals(log[0].type, 'REPLAY_TEST');
+            Assert.deepEquals(log[0].data, { value: 1 });
+            Assert.truthy(log[0].timestamp, 'Should have timestamp');
+            Assert.truthy(log[0].stackTrace, 'Should have stack trace');
+        });
+
+        // Test memory limits
+        test('EventBus should respect memory limits', () => {
+            const eventBus = new EventBus();
+            eventBus.recordEvents = true;
+            eventBus.maxEventLogSize = 5;
+            
+            // Emit more events than the limit
+            for (let i = 0; i < 10; i++) {
+                eventBus.emit('MEMORY_TEST', { index: i });
+            }
+            
+            const log = eventBus.getEventLog();
+            Assert.equals(log.length, 5, 'Should only keep 5 events');
+            Assert.equals(log[0].data.index, 5, 'Should keep newest events');
+            Assert.equals(log[4].data.index, 9, 'Should keep newest events');
+        });
+
+        // Test event filtering
+        test('EventBus getEventLog should filter by type', () => {
+            const eventBus = new EventBus();
+            eventBus.recordEvents = true;
+            
+            eventBus.emit('TYPE_A', { a: 1 });
+            eventBus.emit('TYPE_B', { b: 2 });
+            eventBus.emit('TYPE_A', { a: 3 });
+            
+            const typeAEvents = eventBus.getEventLog('TYPE_A');
+            Assert.equals(typeAEvents.length, 2, 'Should only return TYPE_A events');
+            Assert.equals(typeAEvents[0].data.a, 1);
+            Assert.equals(typeAEvents[1].data.a, 3);
+        });
+
+        // Test event log stats
+        test('EventBus should provide event log statistics', () => {
+            const eventBus = new EventBus();
+            eventBus.recordEvents = true;
+            
+            eventBus.emit('STAT_TEST_A', { data: 'test' });
+            eventBus.emit('STAT_TEST_B', { data: 'test' });
+            eventBus.emit('STAT_TEST_A', { data: 'test' });
+            
+            const stats = eventBus.getEventLogStats();
+            Assert.equals(stats.totalEvents, 3);
+            Assert.equals(stats.eventTypes['STAT_TEST_A'], 2);
+            Assert.equals(stats.eventTypes['STAT_TEST_B'], 1);
+            Assert.truthy(stats.memoryUsage > 0, 'Should track memory usage');
+            Assert.truthy(stats.memoryUsageMB, 'Should provide MB conversion');
+        });
+
+        // Test clear event log
+        test('EventBus should clear event log', () => {
+            const eventBus = new EventBus();
+            eventBus.recordEvents = true;
+            
+            eventBus.emit('CLEAR_TEST', { data: 1 });
+            eventBus.emit('CLEAR_TEST', { data: 2 });
+            
+            Assert.equals(eventBus.getEventLog().length, 2);
+            
+            eventBus.clearEventLog();
+            
+            Assert.equals(eventBus.getEventLog().length, 0, 'Event log should be empty');
+            Assert.equals(eventBus._eventLogMemoryUsage, 0, 'Memory usage should be reset');
+        });
+
+        // Test removing event listeners
+        test('EventBus should remove event listeners', () => {
+            const eventBus = new EventBus();
+            let count = 0;
+            
+            const handler = () => count++;
+            
+            eventBus.on('REMOVE_TEST', handler);
+            eventBus.emit('REMOVE_TEST', {});
+            Assert.equals(count, 1, 'Handler should be called once');
+            
+            eventBus.off('REMOVE_TEST', handler);
+            eventBus.emit('REMOVE_TEST', {});
+            Assert.equals(count, 1, 'Handler should not be called after removal');
+        });
+
+        // Test async replay functionality
+        test('EventBus replay should work with timing', async () => {
+            const eventBus = new EventBus();
+            eventBus.recordEvents = true;
+            let replayCount = 0;
+            
+            // Record some events
+            eventBus.emit('REPLAY_1', { order: 1 });
+            await new Promise(resolve => setTimeout(resolve, 10));
+            eventBus.emit('REPLAY_2', { order: 2 });
+            
+            // Listen for replayed events
+            eventBus.on('REPLAY_1', () => replayCount++);
+            eventBus.on('REPLAY_2', () => replayCount++);
+            
+            // Replay at 10x speed
+            eventBus.replay(0, Date.now(), 10);
+            
+            // Wait for replay to complete
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            Assert.equals(replayCount, 2, 'Both events should be replayed');
+        });
+    </script>
+</body>
+</html>

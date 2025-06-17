@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "todo/05b-TESTING-02b-integration-dashboard.md",
+                "file": "done/03a-FOUNDATION-03a-contract-validation.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "05b-TESTING-02b-integration-dashboard"
+              "title": "03a-FOUNDATION-03a-contract-validation"
             }
           }
         ]
@@ -94,6 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "done/03a-FOUNDATION-03a-contract-validation.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -103,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for 03a-FOUNDATION-03a-contract-validation"
             }
           },
           {
@@ -112,11 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "done/03a-FOUNDATION-03a-contract-validation.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links"
+              "title": "Outgoing links from 03a-FOUNDATION-03a-contract-validation"
             }
           },
           {
@@ -140,13 +142,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "todo/03b-FOUNDATION-03b-event-replay-debug.md",
+                "file": "done/03a-FOUNDATION-03a-contract-validation.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 03b-FOUNDATION-03b-event-replay-debug"
+              "title": "Outline of 03a-FOUNDATION-03a-contract-validation"
             }
           }
         ]
@@ -166,8 +168,14 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "03598af561348156",
+  "active": "92dff61709883541",
   "lastOpenFiles": [
+    "done/04-TESTING-01-test-infrastructure.md",
+    "tests/README.md",
+    "tests/event-bus.test.html",
+    "todo/04-TESTING-01-test-infrastructure.md",
+    "todo/03b-FOUNDATION-03b-event-replay-debug.md",
+    "tests/test-runner.js",
     "done/03b-FOUNDATION-03b-event-replay-debug.md",
     "todo/05b-TESTING-02b-integration-dashboard.md",
     "done/03a-FOUNDATION-03a-contract-validation.md",
@@ -176,8 +184,6 @@
     "todo/05a-TESTING-02a-automated-test-runner.md",
     "src/core/EventBus.js",
     "todo/05-TESTING-02-ice-cubes-test.md",
-    "todo/04-TESTING-01-test-infrastructure.md",
-    "todo/03b-FOUNDATION-03b-event-replay-debug.md",
     "todo/03a-FOUNDATION-03a-contract-validation.md",
     "README.md",
     "done/02-FOUNDATION-02-event-types.md",
@@ -191,8 +197,6 @@
     "node_modules/async/wrapSync.js",
     "node_modules/async/until.js",
     "node_modules/async/whilst.js",
-    "node_modules/async/waterfall.js",
-    "node_modules/async/unmemoize.js",
     "node_modules/iconv-lite/README.md",
     "node_modules/iconv-lite/Changelog.md",
     "node_modules/object-inspect/CHANGELOG.md",
@@ -202,8 +206,6 @@
     "node_modules/qs/CHANGELOG.md",
     "node_modules/minimist/CHANGELOG.md",
     "node_modules/minimist/README.md",
-    "node_modules/math-intrinsics/README.md",
-    "node_modules/math-intrinsics/CHANGELOG.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]
