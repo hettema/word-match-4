@@ -76,35 +76,125 @@ export const EventContracts = {
   LEVEL_LOADED: { levelId: 'number', config: 'object', timestamp: 'number' }
 };
 
-// Contract Validation Function - v3.1 Addition
+// Contract Validation Function - v3.1 Addition (Enhanced)
 export function validateEventContract(eventType, data) {
   const contract = EventContracts[eventType];
   if (!contract) return true; // No contract defined, allow
   
-  // Check required fields
-  for (const [key, expectedType] of Object.entries(contract)) {
-    if (!(key in data)) {
+  // Performance tracking for < 5ms requirement
+  const startTime = performance.now();
+  
+  try {
+    // Check for missing fields
+    for (const [key, expectedType] of Object.entries(contract)) {
+      if (!(key in data)) {
+        throw new ContractViolationError(
+          `Missing required field '${key}' for event '${eventType}'`
+        );
+      }
+      
+      // Validate field type
+      validateFieldType(key, data[key], expectedType, eventType);
+    }
+    
+    // Warn about extra fields (doesn't throw, just warns)
+    if (typeof data === 'object' && data !== null) {
+      const extraFields = Object.keys(data).filter(key => !(key in contract));
+      if (extraFields.length > 0) {
+        console.warn(`[CONTRACT] Extra fields in ${eventType}:`, extraFields);
+      }
+    }
+    
+    const validationTime = performance.now() - startTime;
+    if (validationTime > 5) {
+      console.warn(`[CONTRACT] Validation took ${validationTime.toFixed(2)}ms for ${eventType}`);
+    }
+    
+    return true;
+  } catch (error) {
+    // Re-throw with validation time info
+    const validationTime = performance.now() - startTime;
+    error.validationTime = validationTime;
+    throw error;
+  }
+}
+
+// Helper function to validate field types with better object/array support
+function validateFieldType(fieldName, value, expectedType, eventType) {
+  const actualType = Array.isArray(value) ? 'Array' : typeof value;
+  
+  // Handle Array types
+  if (expectedType.startsWith('Array')) {
+    if (!Array.isArray(value)) {
       throw new ContractViolationError(
-        `Missing required field '${key}' for event '${eventType}'`
+        `Field '${fieldName}' must be an Array for event '${eventType}', got ${actualType}`
       );
     }
     
-    // Type validation
-    const actualType = Array.isArray(data[key]) ? 'Array' : typeof data[key];
-    const cleanExpectedType = expectedType.replace(/<.*>/, ''); // Remove generics
-    
-    if (cleanExpectedType === 'Array' && !Array.isArray(data[key])) {
-      throw new ContractViolationError(
-        `Field '${key}' must be an Array for event '${eventType}', got ${actualType}`
-      );
-    } else if (cleanExpectedType !== 'Array' && actualType !== cleanExpectedType) {
-      throw new ContractViolationError(
-        `Field '${key}' must be ${expectedType} for event '${eventType}', got ${actualType}`
-      );
+    // Validate array element types if specified
+    if (expectedType.includes('<') && expectedType.includes('>')) {
+      const elementType = expectedType.match(/Array<(.+)>/)?.[1];
+      if (elementType && value.length > 0) {
+        // Check first few elements for performance
+        const samplesToCheck = Math.min(value.length, 3);
+        for (let i = 0; i < samplesToCheck; i++) {
+          if (elementType.includes('{')) {
+            // Object shape validation
+            validateObjectShape(value[i], elementType, `${fieldName}[${i}]`, eventType);
+          } else if (elementType === 'object' && typeof value[i] !== 'object') {
+            throw new ContractViolationError(
+              `Array element ${fieldName}[${i}] must be object for event '${eventType}'`
+            );
+          }
+        }
+      }
     }
+    return;
   }
   
-  return true;
+  // Handle object shape types like '{x: number, y: number}'
+  if (expectedType.startsWith('{') && expectedType.endsWith('}')) {
+    if (typeof value !== 'object' || value === null) {
+      throw new ContractViolationError(
+        `Field '${fieldName}' must be an object for event '${eventType}', got ${actualType}`
+      );
+    }
+    validateObjectShape(value, expectedType, fieldName, eventType);
+    return;
+  }
+  
+  // Handle basic types
+  if (actualType !== expectedType) {
+    throw new ContractViolationError(
+      `Field '${fieldName}' must be ${expectedType} for event '${eventType}', got ${actualType}`
+    );
+  }
+}
+
+// Validate object shapes like {x: number, y: number}
+function validateObjectShape(obj, shapeStr, fieldPath, eventType) {
+  // Simple parser for object shapes
+  const shape = shapeStr.match(/{(.+)}/)?.[1];
+  if (!shape) return;
+  
+  // Parse simple key:type pairs
+  const pairs = shape.split(',').map(p => p.trim());
+  for (const pair of pairs) {
+    const [key, type] = pair.split(':').map(s => s.trim());
+    if (key && type) {
+      if (!(key in obj)) {
+        throw new ContractViolationError(
+          `Missing required property '${key}' in ${fieldPath} for event '${eventType}'`
+        );
+      }
+      const actualType = typeof obj[key];
+      if (actualType !== type) {
+        throw new ContractViolationError(
+          `Property '${key}' in ${fieldPath} must be ${type} for event '${eventType}', got ${actualType}`
+        );
+      }
+    }
+  }
 }
 
 // Custom error class for contract violations
