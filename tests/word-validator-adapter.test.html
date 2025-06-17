@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordValidatorAdapter Tests</title>
+</head>
+<body>
+    <h1>WordValidatorAdapter Tests</h1>
+    <div id="test-results"></div>
+    
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { WordValidatorAdapter } from '../src/adapters/WordValidatorAdapter.js';
+        import { WordValidator } from '../src/systems/WordValidator.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+        
+        // Test 1: WordValidatorAdapter constructor
+        test('WordValidatorAdapter initializes with dependencies', () => {
+            const testDict = new Set(['CAT', 'DOG', 'BIRD']);
+            const wordValidator = new WordValidator(testDict);
+            const eventBus = new EventBus();
+            const adapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            Assert.equals(adapter.wordValidator === wordValidator, true, 'Should store wordValidator reference');
+            Assert.equals(adapter.eventBus === eventBus, true, 'Should store eventBus reference');
+            Assert.truthy(adapter.scoreLogic, 'Should have scoreLogic instance');
+        });
+        
+        // Test 2: Valid word emits WORD_VALIDATED
+        test('WordValidatorAdapter validates valid words', () => {
+            const testDict = new Set(['HELLO', 'WORLD', 'TEST']);
+            const wordValidator = new WordValidator(testDict);
+            const eventBus = new EventBus();
+            const adapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            let validatedEvent = null;
+            eventBus.on(EventTypes.WORD_VALIDATED, (data) => {
+                validatedEvent = data;
+            });
+            
+            // Emit word submitted event
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'HELLO',
+                tiles: [
+                    { x: 0, y: 0, letter: 'H', value: 4 },
+                    { x: 1, y: 0, letter: 'E', value: 1 },
+                    { x: 2, y: 0, letter: 'L', value: 1 },
+                    { x: 3, y: 0, letter: 'L', value: 1 },
+                    { x: 4, y: 0, letter: 'O', value: 1 }
+                ],
+                timestamp: 12345
+            });
+            
+            // Check event was emitted
+            Assert.truthy(validatedEvent, 'WORD_VALIDATED event should be emitted');
+            Assert.equals(validatedEvent.word, 'HELLO', 'Word should match');
+            Assert.equals(validatedEvent.score, 28, 'Score should be base (8) + length bonus (20)');
+            Assert.equals(validatedEvent.tiles.length, 5, 'Should include all tiles');
+            Assert.equals(validatedEvent.timestamp, 12345, 'Should preserve timestamp');
+        });
+        
+        // Test 3: Invalid word emits WORD_REJECTED
+        test('WordValidatorAdapter rejects invalid words', () => {
+            const testDict = new Set(['HELLO', 'WORLD']);
+            const wordValidator = new WordValidator(testDict);
+            const eventBus = new EventBus();
+            const adapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            let rejectedEvent = null;
+            eventBus.on(EventTypes.WORD_REJECTED, (data) => {
+                rejectedEvent = data;
+            });
+            
+            // Test word not in dictionary
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'XYZ',
+                tiles: [
+                    { x: 0, y: 0, letter: 'X', value: 8 },
+                    { x: 1, y: 0, letter: 'Y', value: 4 },
+                    { x: 2, y: 0, letter: 'Z', value: 10 }
+                ],
+                timestamp: 67890
+            });
+            
+            Assert.truthy(rejectedEvent, 'WORD_REJECTED event should be emitted');
+            Assert.equals(rejectedEvent.word, 'XYZ', 'Word should match');
+            Assert.equals(rejectedEvent.reason, 'NOT_IN_DICTIONARY', 'Should give correct reason');
+            Assert.equals(rejectedEvent.timestamp, 67890, 'Should preserve timestamp');
+        });
+        
+        // Test 4: Too short word gets rejected
+        test('WordValidatorAdapter rejects too short words', () => {
+            const testDict = new Set(['AB']);
+            const wordValidator = new WordValidator(testDict);
+            const eventBus = new EventBus();
+            const adapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            let rejectedEvent = null;
+            eventBus.on(EventTypes.WORD_REJECTED, (data) => {
+                rejectedEvent = data;
+            });
+            
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'AB',
+                tiles: [
+                    { x: 0, y: 0, letter: 'A', value: 1 },
+                    { x: 1, y: 0, letter: 'B', value: 3 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            Assert.equals(rejectedEvent.reason, 'TOO_SHORT', 'Should reject words under minimum length');
+        });
+        
+        // Test 5: Invalid characters get rejected
+        test('WordValidatorAdapter rejects invalid characters', () => {
+            const testDict = new Set(['HELLO']);
+            const wordValidator = new WordValidator(testDict);
+            const eventBus = new EventBus();
+            const adapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            let rejectedEvent = null;
+            eventBus.on(EventTypes.WORD_REJECTED, (data) => {
+                rejectedEvent = data;
+            });
+            
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'HE11O',
+                tiles: [],
+                timestamp: Date.now()
+            });
+            
+            Assert.equals(rejectedEvent.reason, 'INVALID_CHARACTERS', 'Should reject non-letter characters');
+        });
+        
+        // Test 6: Score calculation is correct
+        test('WordValidatorAdapter calculates scores correctly', () => {
+            const testDict = new Set(['CAT', 'QUICK', 'AMAZING']);
+            const wordValidator = new WordValidator(testDict);
+            const eventBus = new EventBus();
+            const adapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            const validatedEvents = [];
+            eventBus.on(EventTypes.WORD_VALIDATED, (data) => {
+                validatedEvents.push(data);
+            });
+            
+            // Test 3-letter word (minimum length)
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'CAT',
+                tiles: [
+                    { x: 0, y: 0, letter: 'C', value: 3 },
+                    { x: 1, y: 0, letter: 'A', value: 1 },
+                    { x: 2, y: 0, letter: 'T', value: 1 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Test 5-letter word
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'QUICK',
+                tiles: [
+                    { x: 0, y: 1, letter: 'Q', value: 10 },
+                    { x: 1, y: 1, letter: 'U', value: 1 },
+                    { x: 2, y: 1, letter: 'I', value: 1 },
+                    { x: 3, y: 1, letter: 'C', value: 3 },
+                    { x: 4, y: 1, letter: 'K', value: 5 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Test 7-letter word
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'AMAZING',
+                tiles: [
+                    { x: 0, y: 2, letter: 'A', value: 1 },
+                    { x: 1, y: 2, letter: 'M', value: 3 },
+                    { x: 2, y: 2, letter: 'A', value: 1 },
+                    { x: 3, y: 2, letter: 'Z', value: 10 },
+                    { x: 4, y: 2, letter: 'I', value: 1 },
+                    { x: 5, y: 2, letter: 'N', value: 1 },
+                    { x: 6, y: 2, letter: 'G', value: 2 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Check scores
+            Assert.equals(validatedEvents[0].score, 15, 'CAT: base 5 + length bonus 10');
+            Assert.equals(validatedEvents[1].score, 40, 'QUICK: base 20 + length bonus 20');
+            Assert.equals(validatedEvents[2].score, 49, 'AMAZING: base 19 + length bonus 30');
+        });
+        
+        // Test 7: Default timestamp when not provided
+        test('WordValidatorAdapter provides default timestamp', () => {
+            const testDict = new Set(['TEST']);
+            const wordValidator = new WordValidator(testDict);
+            const eventBus = new EventBus();
+            const adapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            let validatedEvent = null;
+            eventBus.on(EventTypes.WORD_VALIDATED, (data) => {
+                validatedEvent = data;
+            });
+            
+            const beforeTime = Date.now();
+            
+            // Emit with timestamp undefined to test default behavior
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'TEST',
+                tiles: [
+                    { x: 0, y: 0, letter: 'T', value: 1 },
+                    { x: 1, y: 0, letter: 'E', value: 1 },
+                    { x: 2, y: 0, letter: 'S', value: 1 },
+                    { x: 3, y: 0, letter: 'T', value: 1 }
+                ],
+                timestamp: beforeTime
+            });
+            
+            const afterTime = Date.now();
+            
+            Assert.truthy(validatedEvent.timestamp >= beforeTime, 'Timestamp should be after test start');
+            Assert.truthy(validatedEvent.timestamp <= afterTime, 'Timestamp should be before test end');
+        });
+        
+        // Test 8: Case insensitive word validation
+        test('WordValidatorAdapter handles case insensitive words', () => {
+            const testDict = new Set(['HELLO']);
+            const wordValidator = new WordValidator(testDict);
+            const eventBus = new EventBus();
+            const adapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            let validatedEvent = null;
+            eventBus.on(EventTypes.WORD_VALIDATED, (data) => {
+                validatedEvent = data;
+            });
+            
+            // Test lowercase word
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'hello',
+                tiles: [
+                    { x: 0, y: 0, letter: 'h', value: 4 },
+                    { x: 1, y: 0, letter: 'e', value: 1 },
+                    { x: 2, y: 0, letter: 'l', value: 1 },
+                    { x: 3, y: 0, letter: 'l', value: 1 },
+                    { x: 4, y: 0, letter: 'o', value: 1 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            Assert.truthy(validatedEvent, 'Should validate lowercase words');
+            Assert.equals(validatedEvent.word, 'hello', 'Should preserve original case');
+        });
+        
+        // Test 9: Empty word handling
+        test('WordValidatorAdapter handles empty words', () => {
+            const testDict = new Set(['TEST']);
+            const wordValidator = new WordValidator(testDict);
+            const eventBus = new EventBus();
+            const adapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            let rejectedEvent = null;
+            eventBus.on(EventTypes.WORD_REJECTED, (data) => {
+                rejectedEvent = data;
+            });
+            
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: '',
+                tiles: [],
+                timestamp: Date.now()
+            });
+            
+            Assert.equals(rejectedEvent.reason, 'INVALID_INPUT', 'Should reject empty words');
+        });
+        
+        // Test 10: Multiple listeners don't interfere
+        test('WordValidatorAdapter works with multiple event listeners', () => {
+            const testDict = new Set(['TEST']);
+            const wordValidator = new WordValidator(testDict);
+            const eventBus = new EventBus();
+            const adapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            let count = 0;
+            let lastEvent = null;
+            
+            // Add multiple listeners
+            eventBus.on(EventTypes.WORD_VALIDATED, (data) => {
+                count++;
+                lastEvent = data;
+            });
+            
+            eventBus.on(EventTypes.WORD_VALIDATED, (data) => {
+                count++;
+            });
+            
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'TEST',
+                tiles: [
+                    { x: 0, y: 0, letter: 'T', value: 1 },
+                    { x: 1, y: 0, letter: 'E', value: 1 },
+                    { x: 2, y: 0, letter: 'S', value: 1 },
+                    { x: 3, y: 0, letter: 'T', value: 1 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            Assert.equals(count, 2, 'Both listeners should be called');
+            Assert.equals(lastEvent.word, 'TEST', 'Event data should be correct');
+        });
+    </script>
+</body>
+</html>

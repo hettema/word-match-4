@@ -163,6 +163,10 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "todo/13-SYSTEMS-02-word-validator-adapter.md",
+    "done/13-SYSTEMS-02-word-validator-adapter.md",
+    "tests/word-validator-adapter.test.html",
+    "src/adapters/WordValidatorAdapter.js",
     "todo/12-SYSTEMS-01-grid-adapter.md",
     "done/12-SYSTEMS-01-grid-adapter.md",
     "tests/grid-adapter.test.html",
@@ -178,8 +182,6 @@
     "tests/game-logic.test.html",
     "src/core/GameLogic.js",
     "done/08-CORE-02-word-validator.md",
-    "tests/word-validator.test.html",
-    "src/systems/WordValidator.js",
     "done/07-CORE-01-grid-logic.md",
     "todo/06a-TESTING-00-visual-stub-temp.md",
     "done/06a-TESTING-00-visual-stub-temp.md",
@@ -195,10 +197,8 @@
     "todo/18-ENGINE-03-input-handler.md",
     "todo/11-CORE-05-game-state-machine.md",
     "todo/14-SYSTEMS-03-game-adapter.md",
-    "todo/13-SYSTEMS-02-word-validator-adapter.md",
     "done/03a-FOUNDATION-03a-contract-validation.md",
     "todo/05-TESTING-02-ice-cubes-test.md",
-    "done/05-TESTING-02-ice-cubes-test.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]
