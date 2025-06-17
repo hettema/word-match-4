@@ -12,6 +12,7 @@ class EventBus extends EventTarget {
         this.maxEventLogSize = 1000; // v3.1 - Prevent memory bloat
         this.maxEventLogMemory = 10 * 1024 * 1024; // 10MB limit
         this._eventLogMemoryUsage = 0;
+        this._handlerMap = new Map(); // Store handler wrappers for removal
     }
     
     emit(type, data) {
@@ -84,10 +85,17 @@ class EventBus extends EventTarget {
             return;
         }
         
-        // Regular event listener
-        this.addEventListener(type, (event) => {
+        // Create wrapper function that extracts detail
+        const wrapper = (event) => {
             handler(event.detail); // Handler receives data directly
-        });
+        };
+        
+        // Store wrapper for later removal
+        const key = `${type}:${handler.toString()}`;
+        this._handlerMap.set(key, wrapper);
+        
+        // Regular event listener
+        this.addEventListener(type, wrapper);
     }
     
     off(type, handler) {
@@ -99,7 +107,14 @@ class EventBus extends EventTarget {
             return;
         }
         
-        this.removeEventListener(type, handler);
+        // Retrieve stored wrapper
+        const key = `${type}:${handler.toString()}`;
+        const wrapper = this._handlerMap.get(key);
+        
+        if (wrapper) {
+            this.removeEventListener(type, wrapper);
+            this._handlerMap.delete(key);
+        }
     }
     
     // v3.1 - Event replay for debugging

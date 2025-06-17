@@ -6,22 +6,616 @@
     <title>Integration Status Dashboard</title>
     <style>
         body {
-            font-family: monospace;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             padding: 20px;
-            background: #1a1a2e;
-            color: #eee;
+            background: #f5f5f5;
+            color: #333;
+            margin: 0;
         }
-        h1 { color: #4fbdba; }
-        .placeholder {
-            color: #888;
-            font-style: italic;
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        button.export {
+            background: #27ae60;
+        }
+        
+        button.export:hover {
+            background: #229954;
+        }
+        
+        .status-summary {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .summary-badge {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .integration-matrix {
+            display: grid;
+            gap: 2px;
+            margin: 20px 0;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        
+        .cell {
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            min-width: 80px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .cell:hover {
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .header {
+            background: #34495e;
+            color: white;
+            font-weight: bold;
+            cursor: default;
+        }
+        
+        .header:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .corner {
+            background: #2c3e50;
+        }
+        
+        .pass {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .fail {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .pending {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .na {
+            background: #ecf0f1;
+            color: #95a5a6;
+            cursor: default;
+        }
+        
+        .na:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .modal h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #95a5a6;
+        }
+        
+        .close:hover {
+            color: #2c3e50;
+        }
+        
+        .test-details {
             margin-top: 20px;
+        }
+        
+        .test-details h3 {
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        
+        .test-log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        
+        .legend {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .legend h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .legend-items {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .auto-refresh input {
+            margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .integration-matrix {
+                font-size: 10px;
+            }
+            .cell {
+                min-width: 60px;
+                min-height: 30px;
+                padding: 5px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Integration Status Dashboard</h1>
-    <p class="placeholder">This dashboard will be implemented in TESTING-02b task</p>
-    <p><a href="index.html" style="color: #4fbdba;">← Back to Test Index</a></p>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Test Suite</a>
+        <h1>Integration Status Dashboard</h1>
+        
+        <div class="controls">
+            <div class="status-summary">
+                <div class="summary-item">
+                    <span>Total:</span>
+                    <span class="summary-badge" style="background: #3498db; color: white;" id="total-count">0</span>
+                </div>
+                <div class="summary-item">
+                    <span>Pass:</span>
+                    <span class="summary-badge pass" id="pass-count">0</span>
+                </div>
+                <div class="summary-item">
+                    <span>Fail:</span>
+                    <span class="summary-badge fail" id="fail-count">0</span>
+                </div>
+                <div class="summary-item">
+                    <span>Pending:</span>
+                    <span class="summary-badge pending" id="pending-count">0</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="auto-refresh">
+                    <input type="checkbox" id="auto-refresh" checked>
+                    <label for="auto-refresh">Auto-refresh (5s)</label>
+                </div>
+                <button onclick="refreshDashboard()">Refresh Now</button>
+                <button class="export" onclick="exportReport()">Export Report</button>
+            </div>
+        </div>
+        
+        <div id="matrix-container">
+            <div class="integration-matrix" id="matrix">
+                <!-- Matrix will be generated here -->
+            </div>
+        </div>
+        
+        <div class="legend">
+            <h3>Legend</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color pass"></div>
+                    <span>Integration Passing</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color fail"></div>
+                    <span>Integration Failing</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color pending"></div>
+                    <span>Not Yet Tested</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color na"></div>
+                    <span>Not Applicable</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for test details -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title">Test Details</h2>
+            <div id="modal-body">
+                <!-- Test details will be shown here -->
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { IntegrationTester } from './integration-tester.js';
+        
+        // Module definitions
+        const modules = [
+            'EventBus',
+            'EventTypes',
+            'InputHandler',
+            'GameAdapter',
+            'GameLogic',
+            'GridAdapter',
+            'GridLogic',
+            'WordValidatorAdapter',
+            'WordValidator',
+            'ScoreAdapter',
+            'ScoreLogic',
+            'GameScene',
+            'TileVisual',
+            'EffectsQueue'
+        ];
+        
+        // Integration pairs that need testing
+        const integrationPairs = [
+            ['InputHandler', 'GameAdapter'],
+            ['GameAdapter', 'GameLogic'],
+            ['GridAdapter', 'GridLogic'],
+            ['WordValidatorAdapter', 'WordValidator'],
+            ['ScoreAdapter', 'ScoreLogic'],
+            ['GameLogic', 'GridAdapter'],
+            ['GameLogic', 'ScoreAdapter'],
+            ['GameLogic', 'WordValidatorAdapter'],
+            ['GridLogic', 'EffectsQueue'],
+            ['TileVisual', 'GridAdapter'],
+            ['GameScene', 'InputHandler'],
+            ['GameScene', 'TileVisual'],
+            ['EventBus', 'EventTypes']
+        ];
+        
+        let integrationTester;
+        let autoRefreshInterval;
+        
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            integrationTester = new IntegrationTester();
+            generateMatrix();
+            updateDashboard();
+            
+            // Set up auto-refresh
+            const autoRefreshCheckbox = document.getElementById('auto-refresh');
+            autoRefreshCheckbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    startAutoRefresh();
+                } else {
+                    stopAutoRefresh();
+                }
+            });
+            
+            if (autoRefreshCheckbox.checked) {
+                startAutoRefresh();
+            }
+        });
+        
+        function generateMatrix() {
+            const matrix = document.getElementById('matrix');
+            const gridSize = modules.length + 1;
+            
+            // Set grid template
+            matrix.style.gridTemplateColumns = `150px repeat(${modules.length}, 1fr)`;
+            matrix.style.gridTemplateRows = `40px repeat(${modules.length}, 1fr)`;
+            
+            // Corner cell
+            const corner = document.createElement('div');
+            corner.className = 'cell header corner';
+            corner.textContent = 'From \\ To';
+            matrix.appendChild(corner);
+            
+            // Column headers
+            modules.forEach(module => {
+                const header = document.createElement('div');
+                header.className = 'cell header';
+                header.textContent = module;
+                header.style.writingMode = 'vertical-rl';
+                header.style.textOrientation = 'mixed';
+                matrix.appendChild(header);
+            });
+            
+            // Rows
+            modules.forEach((fromModule, i) => {
+                // Row header
+                const rowHeader = document.createElement('div');
+                rowHeader.className = 'cell header';
+                rowHeader.textContent = fromModule;
+                matrix.appendChild(rowHeader);
+                
+                // Cells
+                modules.forEach((toModule, j) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.from = fromModule;
+                    cell.dataset.to = toModule;
+                    
+                    if (i === j) {
+                        // Same module - not applicable
+                        cell.className += ' na';
+                        cell.textContent = '—';
+                    } else {
+                        // Check if this is an integration pair
+                        const isPair = integrationPairs.some(pair => 
+                            (pair[0] === fromModule && pair[1] === toModule) ||
+                            (pair[1] === fromModule && pair[0] === toModule)
+                        );
+                        
+                        if (isPair) {
+                            // Get test status
+                            const status = integrationTester.getTestStatus(fromModule, toModule);
+                            updateCell(cell, status);
+                            cell.onclick = () => showTestDetails(fromModule, toModule);
+                        } else {
+                            cell.className += ' na';
+                            cell.textContent = '—';
+                        }
+                    }
+                    
+                    matrix.appendChild(cell);
+                });
+            });
+        }
+        
+        function updateCell(cell, status) {
+            cell.className = 'cell ' + status.status;
+            if (status.status === 'pass') {
+                cell.innerHTML = '✅';
+            } else if (status.status === 'fail') {
+                cell.innerHTML = '❌';
+            } else if (status.status === 'pending') {
+                cell.innerHTML = '⏳';
+            }
+        }
+        
+        function updateDashboard() {
+            const results = integrationTester.getAllResults();
+            let passCount = 0;
+            let failCount = 0;
+            let pendingCount = 0;
+            
+            // Update matrix cells
+            integrationPairs.forEach(pair => {
+                const [from, to] = pair;
+                const status = integrationTester.getTestStatus(from, to);
+                
+                // Update both directions
+                const cell1 = document.querySelector(`[data-from="${from}"][data-to="${to}"]`);
+                const cell2 = document.querySelector(`[data-from="${to}"][data-to="${from}"]`);
+                
+                if (cell1) updateCell(cell1, status);
+                if (cell2) updateCell(cell2, status);
+                
+                // Count statuses
+                if (status.status === 'pass') passCount++;
+                else if (status.status === 'fail') failCount++;
+                else pendingCount++;
+            });
+            
+            // Update summary
+            document.getElementById('total-count').textContent = integrationPairs.length;
+            document.getElementById('pass-count').textContent = passCount;
+            document.getElementById('fail-count').textContent = failCount;
+            document.getElementById('pending-count').textContent = pendingCount;
+        }
+        
+        function showTestDetails(from, to) {
+            const status = integrationTester.getTestStatus(from, to);
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            
+            modalTitle.textContent = `${from} ↔ ${to} Integration`;
+            
+            let content = `
+                <div class="test-details">
+                    <h3>Status: <span class="${status.status}">${status.status.toUpperCase()}</span></h3>
+                    <p><strong>Last Run:</strong> ${status.lastRun ? new Date(status.lastRun).toLocaleString() : 'Never'}</p>
+            `;
+            
+            if (status.events && status.events.length > 0) {
+                content += `
+                    <h3>Captured Events:</h3>
+                    ${status.events.map(event => `
+                        <div class="test-log">
+                            <strong>${event.type}</strong>
+                            ${JSON.stringify(event.data, null, 2)}
+                        </div>
+                    `).join('')}
+                `;
+            }
+            
+            if (status.error) {
+                content += `
+                    <h3>Error:</h3>
+                    <div class="test-log" style="color: #e74c3c;">
+                        ${status.error}
+                    </div>
+                `;
+            }
+            
+            if (status.status === 'pending') {
+                content += `
+                    <p><em>This integration has not been tested yet. Implement the modules and run tests to see results.</em></p>
+                `;
+            }
+            
+            content += `
+                </div>
+                <button onclick="runSingleTest('${from}', '${to}')">Run Test</button>
+            `;
+            
+            modalBody.innerHTML = content;
+            modal.style.display = 'flex';
+        }
+        
+        window.closeModal = function() {
+            document.getElementById('modal').style.display = 'none';
+        };
+        
+        window.runSingleTest = async function(from, to) {
+            await integrationTester.testIntegration(from, to);
+            updateDashboard();
+            showTestDetails(from, to); // Refresh modal
+        };
+        
+        window.refreshDashboard = function() {
+            integrationTester.loadFromStorage();
+            updateDashboard();
+        };
+        
+        window.exportReport = function() {
+            const report = integrationTester.generateReport();
+            const blob = new Blob([report], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `integration-report-${new Date().toISOString().split('T')[0]}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+        
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(() => {
+                refreshDashboard();
+            }, 5000);
+        }
+        
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+        
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+    </script>
 </body>
 </html>
