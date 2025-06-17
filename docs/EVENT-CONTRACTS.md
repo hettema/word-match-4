@@ -23,7 +23,7 @@ All events are defined in `src/core/EventTypes.js`. Each event has:
 
 ### Grid Events
 - **TILES_REMOVED**: `{positions: Array<{x, y}>, source: string, timestamp: number}`
-- **GRAVITY_APPLIED**: `{tilesDropped: Array<{from, to}>, timestamp: number}`
+- **GRAVITY_APPLIED**: `{tilesDropped: Array<{from: {x, y}, to: {x, y}, tile: object}>, timestamp: number}`
 - **GRID_UPDATED**: `{grid: Array<Array>, changedPositions: Array, timestamp: number}`
 
 ### Cascade Events

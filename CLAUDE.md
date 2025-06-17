@@ -2,6 +2,11 @@
 
 This file contains important information for Claude (AI assistant) when working on this project.
 
+## Known Issues
+
+### Contract Validator Complex Types
+The EventBus contract validator has limitations with complex nested type definitions. For events with complex array structures (like `Array<{from: {x, y}, to: {x, y}}>`), we use simplified contracts (like `Array`) with comments documenting the actual structure. See GRAVITY_APPLIED in EventTypes.js for an example.
+
 ## Test Infrastructure
 
 ### Single Source of Truth

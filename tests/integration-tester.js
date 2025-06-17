@@ -87,26 +87,43 @@ export class IntegrationTester {
     }
     
     /**
-     * Check if modules exist
+     * Get dynamic module paths
      */
-    async checkModulesExist(moduleA, moduleB) {
-        // Map module names to file paths
-        const modulePaths = {
+    getModulePaths() {
+        // This method returns all known module paths dynamically
+        // Add new modules here as they are created
+        return {
+            // Core modules
             'EventBus': '../src/core/EventBus.js',
             'EventTypes': '../src/core/EventTypes.js',
-            'InputHandler': '../src/engine/InputHandler.js',
-            'GameAdapter': '../src/adapters/GameAdapter.js',
-            'GameLogic': '../src/core/GameLogic.js',
-            'GridAdapter': '../src/adapters/GridAdapter.js',
             'GridLogic': '../src/core/GridLogic.js',
-            'WordValidatorAdapter': '../src/adapters/WordValidatorAdapter.js',
-            'WordValidator': '../src/systems/WordValidator.js',
-            'ScoreAdapter': '../src/adapters/ScoreAdapter.js',
+            'GameLogic': '../src/core/GameLogic.js',
             'ScoreLogic': '../src/core/ScoreLogic.js',
+            'GameStateMachine': '../src/core/GameStateMachine.js',
+            
+            // System modules
+            'WordValidator': '../src/systems/WordValidator.js',
+            
+            // Adapter modules
+            'GridAdapter': '../src/adapters/GridAdapter.js',
+            'GameAdapter': '../src/adapters/GameAdapter.js',
+            'WordValidatorAdapter': '../src/adapters/WordValidatorAdapter.js',
+            'ScoreAdapter': '../src/adapters/ScoreAdapter.js',
+            
+            // Engine modules
+            'InputHandler': '../src/engine/InputHandler.js',
             'GameScene': '../src/engine/GameScene.js',
             'TileVisual': '../src/engine/TileVisual.js',
             'EffectsQueue': '../src/engine/EffectsQueue.js'
         };
+    }
+    
+    /**
+     * Check if modules exist
+     */
+    async checkModulesExist(moduleA, moduleB) {
+        // Get module paths dynamically
+        const modulePaths = this.getModulePaths();
         
         try {
             // Try to import both modules
@@ -115,16 +132,26 @@ export class IntegrationTester {
             
             if (!pathA || !pathB) return false;
             
-            // For now, only EventBus and EventTypes exist
-            if (moduleA === 'EventBus' || moduleA === 'EventTypes' ||
-                moduleB === 'EventBus' || moduleB === 'EventTypes') {
+            // Actually try to import the modules to check if they exist
+            try {
+                await import(pathA);
+                await import(pathB);
                 return true;
+            } catch (importError) {
+                // If import fails, modules don't exist
+                return false;
             }
-            
-            return false;
         } catch (error) {
             return false;
         }
+    }
+    
+    /**
+     * Get all available modules
+     */
+    getAllModules() {
+        const modulePaths = this.getModulePaths();
+        return Object.keys(modulePaths).sort();
     }
     
     /**
@@ -174,6 +201,117 @@ export class IntegrationTester {
                     return {
                         passed: false,
                         events,
+                        error: error.message
+                    };
+                }
+            },
+            
+            // GridAdapter-GridLogic integration test
+            'GridAdapter-GridLogic': async () => {
+                try {
+                    const { GridAdapter } = await import('../src/adapters/GridAdapter.js');
+                    const { GridLogic } = await import('../src/core/GridLogic.js');
+                    const { EventBus } = await import('../src/core/EventBus.js');
+                    const { EventTypes } = await import('../src/core/EventTypes.js');
+                    
+                    // Create instances
+                    const eventBus = new EventBus();
+                    const gridLogic = new GridLogic(8, 10);
+                    const gridAdapter = new GridAdapter(gridLogic, eventBus);
+                    
+                    // Initialize grid with some tiles
+                    const initialGrid = gridLogic.cloneGrid();
+                    initialGrid[0][0] = { type: 'A', letter: 'A' };
+                    initialGrid[0][1] = { type: 'B', letter: 'B' };
+                    initialGrid[0][2] = { type: 'C', letter: 'C' };
+                    gridLogic.setGrid(initialGrid);
+                    
+                    // Track events
+                    const events = [];
+                    eventBus.on('*', (type, data) => {
+                        events.push({ type, data });
+                    });
+                    
+                    // Test word validation causing tile removal
+                    eventBus.emit(EventTypes.WORD_VALIDATED, {
+                        word: 'ABC',
+                        tiles: [
+                            { x: 0, y: 0 },
+                            { x: 1, y: 0 },
+                            { x: 2, y: 0 }
+                        ],
+                        score: 30
+                    });
+                    
+                    // Verify GridAdapter properly removed tiles from GridLogic
+                    const tilesRemoved = gridLogic.getTile(0, 0) === null && 
+                                       gridLogic.getTile(1, 0) === null && 
+                                       gridLogic.getTile(2, 0) === null;
+                    
+                    // Check if proper events were emitted
+                    const tilesRemovedEvent = events.find(e => e.type === EventTypes.TILES_REMOVED);
+                    
+                    return {
+                        passed: tilesRemoved && tilesRemovedEvent !== undefined,
+                        events,
+                        error: !tilesRemoved ? 'Tiles were not removed from grid' : 
+                               !tilesRemovedEvent ? 'TILES_REMOVED event not emitted' : null
+                    };
+                } catch (error) {
+                    return {
+                        passed: false,
+                        events: [],
+                        error: error.message
+                    };
+                }
+            },
+            
+            // GridAdapter-GameLogic integration test
+            'GameLogic-GridAdapter': async () => {
+                try {
+                    const { GridAdapter } = await import('../src/adapters/GridAdapter.js');
+                    const { GameLogic } = await import('../src/core/GameLogic.js');
+                    const { GridLogic } = await import('../src/core/GridLogic.js');
+                    const { EventBus } = await import('../src/core/EventBus.js');
+                    const { EventTypes } = await import('../src/core/EventTypes.js');
+                    
+                    // Create instances
+                    const eventBus = new EventBus();
+                    const gridLogic = new GridLogic(8, 10);
+                    const gameLogic = new GameLogic(gridLogic, eventBus);
+                    const gridAdapter = new GridAdapter(gridLogic, eventBus);
+                    
+                    // Track events
+                    const events = [];
+                    eventBus.on('*', (type, data) => {
+                        events.push({ type, data });
+                    });
+                    
+                    // Test word validation flow
+                    eventBus.emit(EventTypes.WORD_VALIDATED, {
+                        word: 'TEST',
+                        tiles: [
+                            { x: 0, y: 0 },
+                            { x: 1, y: 0 },
+                            { x: 2, y: 0 },
+                            { x: 3, y: 0 }
+                        ],
+                        score: 40
+                    });
+                    
+                    // Check if GridAdapter emitted TILES_REMOVED
+                    const tilesRemovedEvent = events.find(e => e.type === EventTypes.TILES_REMOVED);
+                    const gridUpdatedEvent = events.find(e => e.type === EventTypes.GRID_UPDATED);
+                    
+                    return {
+                        passed: tilesRemovedEvent !== undefined,
+                        events,
+                        error: tilesRemovedEvent ? null : 'GridAdapter did not emit TILES_REMOVED event'
+                    };
+                } catch (error) {
+                    return {
+                        passed: false,
+                        events: [],
                         error: error.message
                     };
                 }

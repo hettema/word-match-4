@@ -353,23 +353,8 @@
     <script type="module">
         import { IntegrationTester } from './integration-tester.js';
         
-        // Module definitions
-        const modules = [
-            'EventBus',
-            'EventTypes',
-            'InputHandler',
-            'GameAdapter',
-            'GameLogic',
-            'GridAdapter',
-            'GridLogic',
-            'WordValidatorAdapter',
-            'WordValidator',
-            'ScoreAdapter',
-            'ScoreLogic',
-            'GameScene',
-            'TileVisual',
-            'EffectsQueue'
-        ];
+        // Module definitions - dynamically loaded from IntegrationTester
+        let modules = [];
         
         // Integration pairs that need testing
         const integrationPairs = [
@@ -385,7 +370,9 @@
             ['TileVisual', 'GridAdapter'],
             ['GameScene', 'InputHandler'],
             ['GameScene', 'TileVisual'],
-            ['EventBus', 'EventTypes']
+            ['EventBus', 'EventTypes'],
+            ['GameStateMachine', 'GameLogic'],
+            ['GameStateMachine', 'EventBus']
         ];
         
         let integrationTester;
@@ -394,6 +381,8 @@
         // Initialize
         window.addEventListener('DOMContentLoaded', () => {
             integrationTester = new IntegrationTester();
+            // Get modules dynamically
+            modules = integrationTester.getAllModules();
             generateMatrix();
             updateDashboard();
             

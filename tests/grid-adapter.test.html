@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GridAdapter Tests</title>
+</head>
+<body>
+    <h1>GridAdapter Tests</h1>
+    <div id="test-results"></div>
+    
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { GridAdapter } from '../src/adapters/GridAdapter.js';
+        import { GridLogic } from '../src/core/GridLogic.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+        
+        // Test 1: GridAdapter constructor
+        test('GridAdapter initializes with dependencies', () => {
+            const gridLogic = new GridLogic(8, 8);
+            const eventBus = new EventBus();
+            const adapter = new GridAdapter(gridLogic, eventBus);
+            
+            Assert.equals(adapter.gridLogic === gridLogic, true, 'Should store gridLogic reference');
+            Assert.equals(adapter.eventBus === eventBus, true, 'Should store eventBus reference');
+        });
+        
+        // Test 2: Word validated removes tiles
+        test('GridAdapter handles WORD_VALIDATED event', () => {
+            const gridLogic = new GridLogic(8, 8);
+            const eventBus = new EventBus();
+            const adapter = new GridAdapter(gridLogic, eventBus);
+            
+            // Set up some tiles
+            const result1 = gridLogic.setTile(0, 0, { letter: 'H', value: 4 });
+            gridLogic.updateGrid(result1.grid);
+            const result2 = gridLogic.setTile(1, 0, { letter: 'E', value: 1 });
+            gridLogic.updateGrid(result2.grid);
+            const result3 = gridLogic.setTile(2, 0, { letter: 'L', value: 1 });
+            gridLogic.updateGrid(result3.grid);
+            
+            let tilesRemovedEvent = null;
+            eventBus.on(EventTypes.TILES_REMOVED, (data) => {
+                tilesRemovedEvent = data;
+            });
+            
+            // Emit word validated event
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'HEL',
+                score: 6,
+                tiles: [
+                    { x: 0, y: 0, letter: 'H' },
+                    { x: 1, y: 0, letter: 'E' },
+                    { x: 2, y: 0, letter: 'L' }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Debug: Check what happened
+            console.log('Tile at 0,0:', gridLogic.getTile(0, 0));
+            console.log('Tile at 1,0:', gridLogic.getTile(1, 0));
+            console.log('Tile at 2,0:', gridLogic.getTile(2, 0));
+            console.log('tilesRemovedEvent:', tilesRemovedEvent);
+            
+            // Check tiles were removed
+            Assert.equals(gridLogic.getTile(0, 0), null, 'Tile at 0,0 should be removed');
+            Assert.equals(gridLogic.getTile(1, 0), null, 'Tile at 1,0 should be removed');
+            Assert.equals(gridLogic.getTile(2, 0), null, 'Tile at 2,0 should be removed');
+            
+            // Check event was emitted
+            Assert.equals(tilesRemovedEvent !== null, true, 'TILES_REMOVED event should be emitted');
+            Assert.equals(tilesRemovedEvent.positions.length, 3, 'Should have 3 removed positions');
+            Assert.equals(tilesRemovedEvent.source, 'word', 'Source should be word');
+        });
+        
+        // Test 3: Bomb triggered removes tiles
+        test('GridAdapter handles BOMB_TRIGGERED event', () => {
+            const gridLogic = new GridLogic(8, 8);
+            const eventBus = new EventBus();
+            const adapter = new GridAdapter(gridLogic, eventBus);
+            
+            // Set up tiles including bomb
+            gridLogic.updateGrid(gridLogic.setTile(2, 3, { letter: 'B', value: 3, type: 'bomb' }).grid);
+            gridLogic.updateGrid(gridLogic.setTile(1, 3, { letter: 'A', value: 1 }).grid);
+            gridLogic.updateGrid(gridLogic.setTile(3, 3, { letter: 'C', value: 3 }).grid);
+            
+            let tilesRemovedEvent = null;
+            eventBus.on(EventTypes.TILES_REMOVED, (data) => {
+                tilesRemovedEvent = data;
+            });
+            
+            // Emit bomb triggered event
+            eventBus.emit(EventTypes.BOMB_TRIGGERED, {
+                x: 2,
+                y: 3,
+                affectedTiles: [
+                    { x: 1, y: 3 },
+                    { x: 3, y: 3 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Check tiles were removed
+            Assert.equals(gridLogic.getTile(2, 3), null, 'Bomb tile should be removed');
+            Assert.equals(gridLogic.getTile(1, 3), null, 'Affected tile at 1,3 should be removed');
+            Assert.equals(gridLogic.getTile(3, 3), null, 'Affected tile at 3,3 should be removed');
+            
+            // Check event
+            Assert.equals(tilesRemovedEvent.positions.length, 3, 'Should have 3 removed positions');
+            Assert.equals(tilesRemovedEvent.source, 'bomb', 'Source should be bomb');
+        });
+        
+        // Test 4: Gravity is applied after removal
+        test('GridAdapter applies gravity after tile removal', () => {
+            const gridLogic = new GridLogic(4, 4);
+            const eventBus = new EventBus();
+            const adapter = new GridAdapter(gridLogic, eventBus);
+            
+            // Set up tiles with gaps
+            gridLogic.updateGrid(gridLogic.setTile(0, 0, { letter: 'A', value: 1 }).grid);
+            gridLogic.updateGrid(gridLogic.setTile(0, 2, { letter: 'B', value: 3 }).grid);
+            
+            let gravityEvent = null;
+            eventBus.on(EventTypes.GRAVITY_APPLIED, (data) => {
+                gravityEvent = data;
+            });
+            
+            // Remove middle tile to trigger gravity
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'B',
+                score: 3,
+                tiles: [{ x: 0, y: 2, letter: 'B' }],
+                timestamp: Date.now()
+            });
+            
+            // Emit animation complete to trigger gravity
+            eventBus.emit(EventTypes.ANIMATION_COMPLETE, {
+                type: 'tiles_removed',
+                target: { system: 'effects' },
+                timestamp: Date.now()
+            });
+            
+            // Debug gravity
+            console.log('Gravity event:', gravityEvent);
+            console.log('Tile at 0,0 after:', gridLogic.getTile(0, 0));
+            console.log('Tile at 0,2 after:', gridLogic.getTile(0, 2));
+            console.log('Tile at 0,3 after:', gridLogic.getTile(0, 3));
+            
+            // Check gravity was applied
+            Assert.equals(gravityEvent !== null, true, 'GRAVITY_APPLIED event should be emitted');
+            Assert.equals(gravityEvent.tilesDropped.length > 0, true, 'Should have tiles that dropped');
+            Assert.equals(gridLogic.getTile(0, 3) !== null, true, 'Tile should have fallen to bottom');
+        });
+        
+        // Test 5: Grid is refilled after gravity
+        test('GridAdapter refills grid after gravity', () => {
+            const gridLogic = new GridLogic(4, 4);
+            const eventBus = new EventBus();
+            const adapter = new GridAdapter(gridLogic, eventBus);
+            
+            // Fill bottom row
+            for (let x = 0; x < 4; x++) {
+                const result = gridLogic.setTile(x, 3, { letter: 'X', value: 8 });
+                gridLogic.updateGrid(result.grid);
+            }
+            
+            let gridUpdatedEvent = null;
+            eventBus.on(EventTypes.GRID_UPDATED, (data) => {
+                gridUpdatedEvent = data;
+            });
+            
+            // Remove some tiles
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'XX',
+                score: 16,
+                tiles: [
+                    { x: 0, y: 3, letter: 'X' },
+                    { x: 1, y: 3, letter: 'X' }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Emit animation complete to trigger gravity and refill
+            eventBus.emit(EventTypes.ANIMATION_COMPLETE, {
+                type: 'tiles_removed',
+                target: { system: 'effects' },
+                timestamp: Date.now()
+            });
+            
+            // Check grid was refilled
+            Assert.equals(gridUpdatedEvent !== null, true, 'GRID_UPDATED event should be emitted');
+            Assert.equals(gridLogic.getTileCount(), 16, 'Grid should be full again');
+            Assert.equals(gridLogic.getTile(0, 0) !== null, true, 'Top row should have new tiles');
+        });
+        
+        // Test 6: Generate new tile creates valid tiles
+        test('GridAdapter generates valid new tiles', () => {
+            const gridLogic = new GridLogic(8, 8);
+            const eventBus = new EventBus();
+            const adapter = new GridAdapter(gridLogic, eventBus);
+            
+            const tile = adapter.generateNewTile(0, 0);
+            
+            Assert.equals(typeof tile.letter, 'string', 'Tile should have letter');
+            Assert.equals(tile.letter.length, 1, 'Letter should be single character');
+            Assert.equals(/[A-Z]/.test(tile.letter), true, 'Letter should be uppercase');
+            Assert.equals(typeof tile.value, 'number', 'Tile should have numeric value');
+            Assert.equals(tile.value >= 1 && tile.value <= 10, true, 'Value should be 1-10');
+            Assert.equals(tile.type, 'normal', 'Default type should be normal');
+        });
+        
+        // Test 7: Multiple events in sequence
+        test('GridAdapter handles multiple events correctly', () => {
+            const gridLogic = new GridLogic(4, 4);
+            const eventBus = new EventBus();
+            const adapter = new GridAdapter(gridLogic, eventBus);
+            
+            // Fill grid
+            for (let y = 0; y < 4; y++) {
+                for (let x = 0; x < 4; x++) {
+                    const result = gridLogic.setTile(x, y, { letter: 'A', value: 1 });
+                    gridLogic.updateGrid(result.grid);
+                }
+            }
+            
+            const events = [];
+            eventBus.on('*', (type, data) => {
+                if (type !== EventTypes.WORD_VALIDATED) {
+                    events.push(type);
+                }
+            });
+            
+            // Trigger word validated
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'AAA',
+                score: 3,
+                tiles: [
+                    { x: 0, y: 3, letter: 'A' },
+                    { x: 1, y: 3, letter: 'A' },
+                    { x: 2, y: 3, letter: 'A' }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Emit animation complete to trigger gravity
+            eventBus.emit(EventTypes.ANIMATION_COMPLETE, {
+                type: 'tiles_removed',
+                target: { system: 'effects' },
+                timestamp: Date.now()
+            });
+            
+            // Check event sequence
+            Assert.equals(events.includes(EventTypes.TILES_REMOVED), true, 'Should emit TILES_REMOVED');
+            Assert.equals(events.includes(EventTypes.GRAVITY_APPLIED), true, 'Should emit GRAVITY_APPLIED');
+            Assert.equals(events.includes(EventTypes.GRID_UPDATED), true, 'Should emit GRID_UPDATED');
+            
+            // Check correct order
+            const tilesRemovedIndex = events.indexOf(EventTypes.TILES_REMOVED);
+            const gravityIndex = events.indexOf(EventTypes.GRAVITY_APPLIED);
+            const gridUpdatedIndex = events.indexOf(EventTypes.GRID_UPDATED);
+            
+            Assert.equals(tilesRemovedIndex < gravityIndex, true, 'TILES_REMOVED should come before GRAVITY_APPLIED');
+            Assert.equals(gravityIndex < gridUpdatedIndex, true, 'GRAVITY_APPLIED should come before GRID_UPDATED');
+        });
+        
+        // Test 8: Empty word validation doesn't cause issues
+        test('GridAdapter handles empty tile arrays gracefully', () => {
+            const gridLogic = new GridLogic(8, 8);
+            const eventBus = new EventBus();
+            const adapter = new GridAdapter(gridLogic, eventBus);
+            
+            let eventEmitted = false;
+            eventBus.on(EventTypes.TILES_REMOVED, () => {
+                eventEmitted = true;
+            });
+            
+            // Emit word validated with empty tiles
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: '',
+                score: 0,
+                tiles: [],
+                timestamp: Date.now()
+            });
+            
+            Assert.equals(eventEmitted, false, 'Should not emit TILES_REMOVED for empty tiles');
+        });
+    </script>
+</body>
+</html>
