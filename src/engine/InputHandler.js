@@ -52,9 +52,12 @@ export class InputHandler {
         const { timestamp } = data;
         this.isTracing = false;
         
-        // Submit word if we have selected tiles
-        if (this.selectedTiles.length > 0) {
-            this.submitWord(timestamp);
+        // Emit selection complete if we have at least 2 tiles
+        if (this.selectedTiles.length >= 2) {
+            this.eventBus.emit(EventTypes.SELECTION_COMPLETE, {
+                positions: [...this.selectedTiles],
+                timestamp: timestamp || Date.now()
+            });
         }
         
         this.clearSelection(timestamp);
@@ -68,24 +71,6 @@ export class InputHandler {
     
     isAlreadySelected(x, y) {
         return this.selectedTiles.some(tile => tile.x === x && tile.y === y);
-    }
-    
-    submitWord(timestamp) {
-        // Build word from tiles with placeholder letters for now
-        // In real implementation, this would get actual letters from the grid
-        const tilesWithLetters = this.selectedTiles.map((tile, i) => ({
-            x: tile.x,
-            y: tile.y,
-            letter: String.fromCharCode(65 + i) // A, B, C, etc.
-        }));
-        
-        const word = tilesWithLetters.map(t => t.letter).join('');
-        
-        this.eventBus.emit(EventTypes.WORD_SUBMITTED, {
-            word: word,
-            tiles: tilesWithLetters,
-            timestamp: timestamp || Date.now()
-        });
     }
     
     clearSelection(timestamp) {

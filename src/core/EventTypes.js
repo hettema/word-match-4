@@ -5,6 +5,7 @@ export const EventTypes = {
   TILE_ENTERED: 'TILE_ENTERED', 
   INPUT_RELEASED: 'INPUT_RELEASED',
   SELECTION_CHANGED: 'SELECTION_CHANGED',
+  SELECTION_COMPLETE: 'SELECTION_COMPLETE',
   
   // Game State Events
   WORD_SUBMITTED: 'WORD_SUBMITTED',
@@ -60,6 +61,7 @@ export const EventContracts = {
   TILE_ENTERED: { x: 'number', y: 'number', timestamp: 'number' },
   INPUT_RELEASED: { timestamp: 'number' },
   SELECTION_CHANGED: { tiles: 'Array<{x: number, y: number}>', timestamp: 'number' },
+  SELECTION_COMPLETE: { positions: 'Array<{x: number, y: number}>', timestamp: 'number' },
   WORD_VALIDATED: { word: 'string', score: 'number', tiles: 'Array<{x: number, y: number, letter: string}>', timestamp: 'number' },
   WORD_REJECTED: { word: 'string', reason: 'string', timestamp: 'number' },
   TILES_REMOVED: { positions: 'Array<{x: number, y: number}>', source: 'string', timestamp: 'number' },

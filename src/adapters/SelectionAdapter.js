@@ -16,25 +16,28 @@ export class SelectionAdapter {
             this.currentSelection = data.tiles || [];
         });
         
-        // Submit word when input is released
-        this.eventBus.on(EventTypes.INPUT_RELEASED, (data) => {
-            this.handleInputReleased(data);
+        // Submit word when selection is complete
+        this.eventBus.on(EventTypes.SELECTION_COMPLETE, (data) => {
+            this.handleSelectionComplete(data);
         });
     }
     
-    handleInputReleased(data) {
+    handleSelectionComplete(data) {
+        // Use positions from the event instead of currentSelection
+        const positions = data.positions || [];
+        
         // Only submit if we have at least 2 tiles selected
-        if (this.currentSelection.length < 2) {
+        if (positions.length < 2) {
             return;
         }
         
-        console.log('SelectionAdapter: Processing selection:', this.currentSelection);
+        console.log('SelectionAdapter: Processing selection:', positions);
         
         // Build word from actual grid letters
         const tilesWithLetters = [];
         const letters = [];
         
-        for (const pos of this.currentSelection) {
+        for (const pos of positions) {
             const tile = this.gridLogic.getTile(pos.x, pos.y);
             console.log(`SelectionAdapter: Tile at (${pos.x}, ${pos.y}):`, tile);
             
@@ -51,7 +54,7 @@ export class SelectionAdapter {
         console.log('SelectionAdapter: Found tiles with letters:', tilesWithLetters);
         
         // Only submit if we got valid letters for all positions
-        if (tilesWithLetters.length === this.currentSelection.length) {
+        if (tilesWithLetters.length === positions.length) {
             const word = letters.join('');
             console.log('SelectionAdapter: Submitting word:', word);
             
@@ -64,8 +67,5 @@ export class SelectionAdapter {
                 });
             }, 10);
         }
-        
-        // Clear our tracked selection
-        this.currentSelection = [];
     }
 }

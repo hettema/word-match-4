@@ -148,18 +148,18 @@
             Assert.equals(handler.areAdjacent(center, { x: 5, y: 5 }), false, 'Same tile');
         });
 
-        // Test: Input release submits word
-        test('INPUT_RELEASED submits word', () => {
+        // Test: Input release emits selection complete
+        test('INPUT_RELEASED emits SELECTION_COMPLETE', () => {
             const eventBus = new EventBus();
             const handler = new InputHandler(eventBus);
             handler.init();
             
-            let wordSubmitted = false;
-            let submittedTiles = null;
+            let selectionComplete = false;
+            let completedPositions = null;
             
-            eventBus.on(EventTypes.WORD_SUBMITTED, (data) => {
-                wordSubmitted = true;
-                submittedTiles = data.tiles;
+            eventBus.on(EventTypes.SELECTION_COMPLETE, (data) => {
+                selectionComplete = true;
+                completedPositions = data.positions;
             });
             
             // Build a word
@@ -170,10 +170,29 @@
             // Release input
             eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1300 });
             
-            Assert.equals(wordSubmitted, true, 'WORD_SUBMITTED event emitted');
-            Assert.equals(submittedTiles.length, 3, 'Submitted 3 tiles');
+            Assert.equals(selectionComplete, true, 'SELECTION_COMPLETE event emitted');
+            Assert.equals(completedPositions.length, 3, 'Completed with 3 positions');
             Assert.equals(handler.selectedTiles.length, 0, 'Selection cleared');
             Assert.equals(handler.isTracing, false, 'Tracing stopped');
+        });
+
+        // Test: No SELECTION_COMPLETE for single tile
+        test('No SELECTION_COMPLETE for single tile', () => {
+            const eventBus = new EventBus();
+            const handler = new InputHandler(eventBus);
+            handler.init();
+            
+            let selectionComplete = false;
+            
+            eventBus.on(EventTypes.SELECTION_COMPLETE, () => {
+                selectionComplete = true;
+            });
+            
+            // Select only one tile
+            eventBus.emit(EventTypes.TILE_PRESSED, { x: 3, y: 4, timestamp: 1000 });
+            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            
+            Assert.equals(selectionComplete, false, 'SELECTION_COMPLETE not emitted for single tile');
         });
 
         // Test: Selection cleared event
