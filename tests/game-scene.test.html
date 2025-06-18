@@ -55,38 +55,17 @@
                 Assert.truthy(scene.destabilizedTiles instanceof Map, 'Destabilized tiles should be Map');
             });
             
-            // Test helper methods
-            test('getTileColor should return correct colors for tile types', () => {
+            // Test Tile.js integration
+            test('GameScene should use Tile instances instead of inline sprites', () => {
                 const scene = new GameScene();
                 
-                // Test normal tile
-                Assert.equals(scene.getTileColor('normal'), 0xecf0f1, 'Normal tile color');
-                Assert.equals(scene.getTileColor(), 0xecf0f1, 'Default tile color');
+                // Verify tiles array exists
+                Assert.truthy(scene.tiles !== undefined, 'Scene should have tiles property');
                 
-                // Test special tiles
-                Assert.equals(scene.getTileColor('bomb'), 0xe74c3c, 'Bomb tile color');
-                Assert.equals(scene.getTileColor('ice'), 0x3498db, 'Ice tile color');
-                Assert.equals(scene.getTileColor('stone'), 0x7f8c8d, 'Stone tile color');
-                Assert.equals(scene.getTileColor('multiplier'), 0xf39c12, 'Multiplier tile color');
-                Assert.equals(scene.getTileColor('hidden'), 0x9b59b6, 'Hidden tile color');
-                
-                // Test unknown type
-                Assert.equals(scene.getTileColor('unknown'), 0xecf0f1, 'Unknown type defaults to normal');
-            });
-            
-            test('getTileDisplayText should return correct text without emojis', () => {
-                const scene = new GameScene();
-                
-                // Test special tiles (no emojis)
-                Assert.equals(scene.getTileDisplayText({type: 'bomb'}), 'B', 'Bomb displays B');
-                Assert.equals(scene.getTileDisplayText({type: 'ice'}), 'ICE', 'Ice displays ICE');
-                Assert.equals(scene.getTileDisplayText({type: 'stone'}), 'S', 'Stone displays S');
-                Assert.equals(scene.getTileDisplayText({type: 'multiplier'}), '×2', 'Multiplier displays ×2');
-                Assert.equals(scene.getTileDisplayText({type: 'hidden'}), '?', 'Hidden displays ?');
-                
-                // Test normal tiles
-                Assert.equals(scene.getTileDisplayText({letter: 'A'}), 'A', 'Normal tile shows letter');
-                Assert.equals(scene.getTileDisplayText({}), '', 'Empty tile shows empty string');
+                // Note: getTileColor and getTileDisplayText are now handled by Tile.js
+                // These methods should not exist on GameScene
+                Assert.falsy(typeof scene.getTileColor === 'function', 'getTileColor should not exist');
+                Assert.falsy(typeof scene.getTileDisplayText === 'function', 'getTileDisplayText should not exist');
             });
             
             test('getTileAt should convert screen coordinates to grid coordinates', () => {
@@ -143,36 +122,22 @@
             });
             
             // Test grid creation
-            test('createGrid should create correct number of tile sprites', () => {
+            test('createGrid should prepare tiles array for Tile instances', () => {
                 const scene = new GameScene();
                 scene.gridLogic = { width: 4, height: 4 };
                 scene.game = { config: { width: 800, height: 600 } };
-                scene.tileSprites = []; // Initialize the array
-                
-                // Mock Phaser methods
-                const containers = [];
-                scene.add = {
-                    container: (x, y) => {
-                        const container = { x, y, add: () => {}, setVisible: () => {} };
-                        containers.push(container);
-                        return container;
-                    },
-                    rectangle: () => ({ setStrokeStyle: () => {} }),
-                    text: () => ({ setOrigin: () => {} })
-                };
+                scene.tiles = []; // Initialize the array
                 
                 scene.createGrid();
                 
-                Assert.equals(scene.tileSprites.length, 4, 'Should have 4 rows');
-                Assert.equals(scene.tileSprites[0].length, 4, 'Should have 4 columns');
-                Assert.equals(containers.length, 16, 'Should create 16 containers');
+                Assert.equals(scene.tiles.length, 4, 'Should have 4 rows');
+                Assert.equals(scene.tiles[0].length, 4, 'Should have 4 columns');
                 
-                // Verify grid structure
+                // Verify grid structure - all positions should be null initially
                 for (let y = 0; y < 4; y++) {
                     for (let x = 0; x < 4; x++) {
-                        const sprite = scene.tileSprites[y][x];
-                        Assert.equals(sprite.gridX, x, `Sprite at [${y}][${x}] has correct gridX`);
-                        Assert.equals(sprite.gridY, y, `Sprite at [${y}][${x}] has correct gridY`);
+                        const tile = scene.tiles[y][x];
+                        Assert.equals(tile, null, `Position [${y}][${x}] should be null initially`);
                     }
                 }
             });

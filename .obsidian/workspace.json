@@ -11,14 +11,10 @@
             "id": "92dff61709883541",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "todo/17-ENGINE-02-tile-visual.md",
-                "mode": "preview",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "17-ENGINE-02-tile-visual"
+              "title": "New tab"
             }
           }
         ]
@@ -94,7 +90,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "todo/17-ENGINE-02-tile-visual.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +99,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 17-ENGINE-02-tile-visual"
+              "title": "Backlinks"
             }
           },
           {
@@ -113,12 +108,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "todo/17-ENGINE-02-tile-visual.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 17-ENGINE-02-tile-visual"
+              "title": "Outgoing links"
             }
           },
           {
@@ -142,13 +136,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "todo/17-ENGINE-02-tile-visual.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 17-ENGINE-02-tile-visual"
+              "title": "Outline"
             }
           }
         ]
@@ -170,13 +163,18 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "todo/17a-ENGINE-02a-tile-integration.md",
+    "done/17a-ENGINE-02a-tile-integration.md",
+    "src/engine/GameScene.js.backup",
+    "todo/17-ENGINE-02-tile-visual.md",
+    "done/17-ENGINE-02-tile-visual.md",
+    "src/engine/Tile.js",
     "done/16e-ENGINE-01e-integration-tests.md",
     "todo/16e-ENGINE-01e-integration-tests.md",
     "tests/game-scene.test.html",
     "done/16d-ENGINE-01d-selection-effects.md",
     "todo/16d-ENGINE-01d-selection-effects.md",
     "tests/game-scene-effects.test.html",
-    "todo/17-ENGINE-02-tile-visual.md",
     "todo/18-ENGINE-03-input-handler.md",
     "todo/23-FEATURES-01-word-mechanics.md",
     "todo/16c-ENGINE-01c-grid-rendering.md",
@@ -201,11 +199,6 @@
     "todo/14-SYSTEMS-03-game-adapter.md",
     "done/14-SYSTEMS-03-game-adapter.md",
     "tests/game-adapter.test.html",
-    "src/adapters/GameAdapter.js",
-    "todo/13-SYSTEMS-02-word-validator-adapter.md",
-    "done/13-SYSTEMS-02-word-validator-adapter.md",
-    "tests/word-validator-adapter.test.html",
-    "todo/12-SYSTEMS-01-grid-adapter.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]
