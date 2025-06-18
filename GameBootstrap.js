@@ -4,7 +4,13 @@ import { EventTypes } from './src/core/EventTypes.js';
 import { WordValidator } from './src/systems/WordValidator.js';
 import { GameScene } from './src/engine/GameScene.js';
 import { GridLogic } from './src/core/GridLogic.js';
+import { GameLogic } from './src/core/GameLogic.js';
+import { ScoreLogic } from './src/core/ScoreLogic.js';
 import { InputHandler } from './src/engine/InputHandler.js';
+import { GridAdapter } from './src/adapters/GridAdapter.js';
+import { WordValidatorAdapter } from './src/adapters/WordValidatorAdapter.js';
+import { GameAdapter } from './src/adapters/GameAdapter.js';
+import { ScoreAdapter } from './src/adapters/ScoreAdapter.js';
 
 class GameBootstrap {
     constructor() {
@@ -73,27 +79,25 @@ class GameBootstrap {
         console.log('Initializing systems...');
         
         // 3. Create pure logic modules (no async, no events)
-        // Note: We'll create these as they're implemented
-        // this.gameLogic = new GameLogic();
+        this.gameLogic = new GameLogic();
         this.gridLogic = new GridLogic(8, 8); // From config later
-        // this.scoreLogic = new ScoreLogic();
+        this.scoreLogic = new ScoreLogic();
         
         // WordValidator is NOW pure - receives pre-loaded dictionary
         this.wordValidator = new WordValidator(this.dictionaryWords);
         console.log(`WordValidator initialized with ${this.wordValidator.getDictionarySize()} words`);
         
         // 4. Create adapters (connect logic to events)
-        // Note: We'll create these as they're implemented
-        // this.gameAdapter = new GameAdapter(this.gameLogic, this.eventBus);
-        // this.gridAdapter = new GridAdapter(this.gridLogic, this.eventBus);
-        // this.scoreAdapter = new ScoreAdapter(this.scoreLogic, this.eventBus);
-        // this.wordValidatorAdapter = new WordValidatorAdapter(this.wordValidator, this.eventBus);
+        this.gameAdapter = new GameAdapter(this.gameLogic, this.eventBus);
+        this.gridAdapter = new GridAdapter(this.gridLogic, this.eventBus);
+        this.scoreAdapter = new ScoreAdapter(this.scoreLogic, this.eventBus);
+        this.wordValidatorAdapter = new WordValidatorAdapter(this.wordValidator, this.eventBus);
         
         // Create InputHandler to manage word tracing
         this.inputHandler = new InputHandler(this.eventBus);
         this.inputHandler.init();
         
-        console.log('Systems initialized (placeholders for now)');
+        console.log('Systems initialized - all adapters connected');
     }
     
     initializePhaser() {
@@ -111,7 +115,7 @@ class GameBootstrap {
                 preBoot: (game) => {
                     game.registry.set('eventBus', this.eventBus);
                     game.registry.set('gridLogic', this.gridLogic);
-                    // game.registry.set('gameLogic', this.gameLogic);
+                    game.registry.set('gameLogic', this.gameLogic);
                 }
             }
         };

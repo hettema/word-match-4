@@ -170,6 +170,8 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "todo/17a-ENGINE-03a-input-handler-refactor.md",
+    "todo/17-SYSTEMS-06-selection-adapter.md",
     "todo/18-ENGINE-03-input-handler.md",
     "done/18-ENGINE-03-input-handler.md",
     "tests/input-handler.test.html",
@@ -203,8 +205,6 @@
     "todo/failed",
     "todo/22-UI-03-game-state-ui.md",
     "todo/21-UI-02-word-tracer.md",
-    "todo/20-UI-01-hud-implementation.md",
-    "todo/15-SYSTEMS-04-score-adapter.md",
     "tests/score-adapter.test.html",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"

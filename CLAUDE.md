@@ -56,6 +56,19 @@ The EventBus contract validator has limitations with complex nested type definit
 - All future modules should add their tests to the existing infrastructure
 - Do NOT create new test runners or index files
 
+## Word Submission Architecture
+
+### Current Issue (To Be Fixed)
+- InputHandler currently emits WORD_SUBMITTED with placeholder letters (A, B, C...)
+- This causes word validation to fail even for valid words
+- SelectionAdapter (SYSTEMS-06) will fix this by accessing GridLogic for real letters
+
+### Target Architecture
+- **InputHandler** - Tracks tile selection and emits SELECTION_COMPLETE
+- **SelectionAdapter** - Listens to selection events and has GridLogic access
+- **SelectionAdapter** - Builds words with real letters and emits WORD_SUBMITTED
+- This separation allows InputHandler to remain in engine layer without game logic
+
 ## Commands
 
 ### Running Tests
