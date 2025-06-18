@@ -166,6 +166,27 @@ class GameBootstrap {
             level: 1,
             timestamp: Date.now()
         });
+        
+        // TEMPORARY: Emit test grid to verify rendering
+        setTimeout(() => {
+            const testGrid = [
+                [{letter:'H',value:4,type:'normal'},{letter:'E',value:1,type:'normal'},{letter:'L',value:1,type:'normal'},{letter:'L',value:1,type:'normal'},{letter:'O',value:1,type:'normal'},{type:'bomb'},{type:'ice'},{letter:'A',value:1,type:'normal'}],
+                [{letter:'W',value:4,type:'normal'},{letter:'O',value:1,type:'normal'},{letter:'R',value:1,type:'normal'},{letter:'L',value:1,type:'normal'},{letter:'D',value:2,type:'normal'},{type:'stone'},{type:'multiplier'},{letter:'B',value:3,type:'normal'}],
+                [{letter:'T',value:1,type:'normal'},{letter:'E',value:1,type:'normal'},{letter:'S',value:1,type:'normal'},{letter:'T',value:1,type:'normal'},{type:'hidden'},{letter:'X',value:8,type:'normal'},{letter:'Y',value:4,type:'normal'},{letter:'Z',value:10,type:'normal'}],
+                [{letter:'G',value:2,type:'normal'},{letter:'A',value:1,type:'normal'},{letter:'M',value:3,type:'normal'},{letter:'E',value:1,type:'normal'},{letter:'I',value:1,type:'normal'},{letter:'S',value:1,type:'normal'},{letter:'K',value:5,type:'normal'},{letter:'Q',value:10,type:'normal'}],
+                [{letter:'P',value:3,type:'normal'},{letter:'L',value:1,type:'normal'},{letter:'A',value:1,type:'normal'},{letter:'Y',value:4,type:'normal'},{letter:'F',value:4,type:'normal'},{letter:'U',value:1,type:'normal'},{letter:'J',value:8,type:'normal'},{letter:'F',value:4,type:'normal'}],
+                [{letter:'N',value:1,type:'normal'},{letter:'O',value:1,type:'normal'},{letter:'W',value:4,type:'normal'},{type:'bomb'},{letter:'A',value:1,type:'normal'},{letter:'N',value:1,type:'normal'},{type:'ice'},{letter:'V',value:4,type:'normal'}],
+                [{letter:'C',value:3,type:'normal'},{letter:'O',value:1,type:'normal'},{letter:'D',value:2,type:'normal'},{letter:'E',value:1,type:'normal'},{letter:'R',value:1,type:'normal'},{letter:'S',value:1,type:'normal'},{type:'stone'},{letter:'H',value:4,type:'normal'}],
+                [{letter:'F',value:4,type:'normal'},{letter:'U',value:1,type:'normal'},{letter:'N',value:1,type:'normal'},{type:'multiplier'},{letter:'I',value:1,type:'normal'},{letter:'T',value:1,type:'normal'},{letter:'S',value:1,type:'normal'},{type:'hidden'}]
+            ];
+            
+            console.log('Emitting test grid for rendering verification');
+            this.eventBus.emit(EventTypes.GRID_UPDATED, {
+                grid: testGrid,
+                changedPositions: [],
+                timestamp: Date.now()
+            });
+        }, 500);
     }
 }
 
