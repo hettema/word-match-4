@@ -9,8 +9,8 @@ export class GameScene extends Phaser.Scene {
     create() {
         this.eventBus = this.game.registry.get('eventBus');
         this.gridLogic = this.game.registry.get('gridLogic');
-        if (!this.eventBus) { console.error('EventBus not found in registry!'); return; }
-        if (!this.gridLogic) { console.error('GridLogic not found in registry!'); return; }
+        if (!this.eventBus) { return; }
+        if (!this.gridLogic) { return; }
         this.tileSprites = []; this.createGrid(); this.setupRenderListeners();
     }
     
@@ -185,7 +185,7 @@ export class GameScene extends Phaser.Scene {
     }
     
     getTileDisplayText(tile) {
-        const displays = { [TILE_TYPES.BOMB]: '💣', [TILE_TYPES.ICE]: '🧊', [TILE_TYPES.STONE]: '🪨', [TILE_TYPES.MULTIPLIER]: '×2', [TILE_TYPES.HIDDEN]: '?' };
+        const displays = { [TILE_TYPES.BOMB]: 'B', [TILE_TYPES.ICE]: 'ICE', [TILE_TYPES.STONE]: 'S', [TILE_TYPES.MULTIPLIER]: '×2', [TILE_TYPES.HIDDEN]: '?' };
         return displays[tile.type] || tile.letter || '';
     }
     

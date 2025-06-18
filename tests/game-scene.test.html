@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameScene Tests</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #2c3e50; }
+        .back-link { color: #3498db; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Test Suite</a>
+        <h1>GameScene Tests</h1>
+        <div id="test-results"></div>
+    </div>
+
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+        
+        // Mock Phaser for headless testing
+        const mockPhaser = {
+            Scene: class {
+                constructor(config) { this.key = config?.key; }
+            },
+            Math: {
+                Between: (min, max) => min
+            }
+        };
+        
+        // Replace global Phaser temporarily
+        const originalPhaser = window.Phaser;
+        window.Phaser = mockPhaser;
+        
+        // Import after mocking
+        import('../src/engine/GameScene.js').then(module => {
+            const { GameScene } = module;
+            
+            // Restore original Phaser
+            window.Phaser = originalPhaser;
+            
+            // Test Scene initialization
+            test('GameScene should initialize with correct properties', () => {
+                const scene = new GameScene();
+                Assert.equals(scene.key, 'GameScene', 'Scene key should be GameScene');
+                Assert.equals(scene.tileSize, 64, 'Tile size should be 64');
+                Assert.equals(scene.strokeWidth, 2, 'Stroke width should be 2');
+                Assert.equals(scene.selectedStrokeWidth, 4, 'Selected stroke width should be 4');
+                Assert.truthy(Array.isArray(scene.previousSelection), 'Previous selection should be array');
+                Assert.truthy(scene.destabilizedTiles instanceof Map, 'Destabilized tiles should be Map');
+            });
+            
+            // Test helper methods
+            test('getTileColor should return correct colors for tile types', () => {
+                const scene = new GameScene();
+                
+                // Test normal tile
+                Assert.equals(scene.getTileColor('normal'), 0xecf0f1, 'Normal tile color');
+                Assert.equals(scene.getTileColor(), 0xecf0f1, 'Default tile color');
+                
+                // Test special tiles
+                Assert.equals(scene.getTileColor('bomb'), 0xe74c3c, 'Bomb tile color');
+                Assert.equals(scene.getTileColor('ice'), 0x3498db, 'Ice tile color');
+                Assert.equals(scene.getTileColor('stone'), 0x7f8c8d, 'Stone tile color');
+                Assert.equals(scene.getTileColor('multiplier'), 0xf39c12, 'Multiplier tile color');
+                Assert.equals(scene.getTileColor('hidden'), 0x9b59b6, 'Hidden tile color');
+                
+                // Test unknown type
+                Assert.equals(scene.getTileColor('unknown'), 0xecf0f1, 'Unknown type defaults to normal');
+            });
+            
+            test('getTileDisplayText should return correct text without emojis', () => {
+                const scene = new GameScene();
+                
+                // Test special tiles (no emojis)
+                Assert.equals(scene.getTileDisplayText({type: 'bomb'}), 'B', 'Bomb displays B');
+                Assert.equals(scene.getTileDisplayText({type: 'ice'}), 'ICE', 'Ice displays ICE');
+                Assert.equals(scene.getTileDisplayText({type: 'stone'}), 'S', 'Stone displays S');
+                Assert.equals(scene.getTileDisplayText({type: 'multiplier'}), '×2', 'Multiplier displays ×2');
+                Assert.equals(scene.getTileDisplayText({type: 'hidden'}), '?', 'Hidden displays ?');
+                
+                // Test normal tiles
+                Assert.equals(scene.getTileDisplayText({letter: 'A'}), 'A', 'Normal tile shows letter');
+                Assert.equals(scene.getTileDisplayText({}), '', 'Empty tile shows empty string');
+            });
+            
+            test('getTileAt should convert screen coordinates to grid coordinates', () => {
+                const scene = new GameScene();
+                scene.gridLogic = { width: 8, height: 8 };
+                scene.game = { config: { width: 800, height: 600 } };
+                
+                // Grid is 8x8 with 64px tiles = 512x512
+                // Centered at (144, 44) based on 800x600 canvas
+                
+                // Test top-left tile
+                const topLeft = scene.getTileAt(144, 44);
+                Assert.deepEquals(topLeft, {x: 0, y: 0}, 'Top-left corner');
+                
+                // Test center of first tile
+                const firstTileCenter = scene.getTileAt(176, 76);
+                Assert.deepEquals(firstTileCenter, {x: 0, y: 0}, 'Center of first tile');
+                
+                // Test bottom-right tile
+                const bottomRight = scene.getTileAt(655, 555);
+                Assert.deepEquals(bottomRight, {x: 7, y: 7}, 'Bottom-right corner');
+                
+                // Test out of bounds
+                const outOfBounds1 = scene.getTileAt(0, 0);
+                Assert.equals(outOfBounds1, null, 'Out of bounds returns null');
+                
+                const outOfBounds2 = scene.getTileAt(800, 600);
+                Assert.equals(outOfBounds2, null, 'Out of bounds returns null');
+            });
+            
+            // Test event listener setup
+            test('setupRenderListeners should register all required event handlers', () => {
+                const scene = new GameScene();
+                const eventBus = new EventBus();
+                const registeredEvents = [];
+                
+                // Mock the on method to capture registrations
+                eventBus.on = (type, handler) => {
+                    registeredEvents.push(type);
+                };
+                
+                scene.eventBus = eventBus;
+                scene.setupRenderListeners();
+                
+                // Verify all required events are registered
+                Assert.includes(registeredEvents, EventTypes.GRID_UPDATED, 'GRID_UPDATED listener');
+                Assert.includes(registeredEvents, EventTypes.SELECTION_CHANGED, 'SELECTION_CHANGED listener');
+                Assert.includes(registeredEvents, EventTypes.TILES_REMOVED, 'TILES_REMOVED listener');
+                Assert.includes(registeredEvents, EventTypes.TILE_DESTABILIZED, 'TILE_DESTABILIZED listener');
+                Assert.includes(registeredEvents, EventTypes.ANIMATION_STARTED, 'ANIMATION_STARTED listener');
+                Assert.includes(registeredEvents, EventTypes.ANIMATION_COMPLETE, 'ANIMATION_COMPLETE listener');
+                
+                Assert.equals(registeredEvents.length, 6, 'Exactly 6 event listeners registered');
+            });
+            
+            // Test grid creation
+            test('createGrid should create correct number of tile sprites', () => {
+                const scene = new GameScene();
+                scene.gridLogic = { width: 4, height: 4 };
+                scene.game = { config: { width: 800, height: 600 } };
+                scene.tileSprites = []; // Initialize the array
+                
+                // Mock Phaser methods
+                const containers = [];
+                scene.add = {
+                    container: (x, y) => {
+                        const container = { x, y, add: () => {}, setVisible: () => {} };
+                        containers.push(container);
+                        return container;
+                    },
+                    rectangle: () => ({ setStrokeStyle: () => {} }),
+                    text: () => ({ setOrigin: () => {} })
+                };
+                
+                scene.createGrid();
+                
+                Assert.equals(scene.tileSprites.length, 4, 'Should have 4 rows');
+                Assert.equals(scene.tileSprites[0].length, 4, 'Should have 4 columns');
+                Assert.equals(containers.length, 16, 'Should create 16 containers');
+                
+                // Verify grid structure
+                for (let y = 0; y < 4; y++) {
+                    for (let x = 0; x < 4; x++) {
+                        const sprite = scene.tileSprites[y][x];
+                        Assert.equals(sprite.gridX, x, `Sprite at [${y}][${x}] has correct gridX`);
+                        Assert.equals(sprite.gridY, y, `Sprite at [${y}][${x}] has correct gridY`);
+                    }
+                }
+            });
+            
+            // Test no console.log statements
+            test('GameScene should not contain console.log statements', async () => {
+                const response = await fetch('../src/engine/GameScene.js');
+                const code = await response.text();
+                
+                Assert.falsy(code.includes('console.log'), 'No console.log statements');
+                Assert.falsy(code.includes('console.warn'), 'No console.warn statements');
+                Assert.falsy(code.includes('console.error'), 'No console.error statements');
+            });
+            
+            // Test file size
+            test('GameScene file should be under 300 lines', async () => {
+                const response = await fetch('../src/engine/GameScene.js');
+                const code = await response.text();
+                const lines = code.split('\n').length;
+                
+                Assert.truthy(lines < 300, `File has ${lines} lines, should be under 300`);
+            });
+        });
+    </script>
+</body>
+</html>
