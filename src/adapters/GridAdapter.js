@@ -7,9 +7,17 @@ export class GridAdapter {
         this.eventBus = eventBus;
         
         // Listen for grid-affecting events
+        eventBus.on(EventTypes.GRID_UPDATED, this.handleGridUpdated.bind(this));
         eventBus.on(EventTypes.WORD_VALIDATED, this.handleWordValidated.bind(this));
         eventBus.on(EventTypes.BOMB_TRIGGERED, this.handleBombTriggered.bind(this));
         eventBus.on(EventTypes.ANIMATION_COMPLETE, this.handleAnimationComplete.bind(this));
+    }
+    
+    handleGridUpdated(data) {
+        // Update GridLogic's internal state when grid changes
+        if (data.grid) {
+            this.gridLogic.updateGrid(data.grid);
+        }
     }
     
     handleWordValidated(data) {

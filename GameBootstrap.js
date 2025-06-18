@@ -11,6 +11,7 @@ import { GridAdapter } from './src/adapters/GridAdapter.js';
 import { WordValidatorAdapter } from './src/adapters/WordValidatorAdapter.js';
 import { GameAdapter } from './src/adapters/GameAdapter.js';
 import { ScoreAdapter } from './src/adapters/ScoreAdapter.js';
+import { SelectionAdapter } from './src/adapters/SelectionAdapter.js';
 
 class GameBootstrap {
     constructor() {
@@ -92,6 +93,7 @@ class GameBootstrap {
         this.gridAdapter = new GridAdapter(this.gridLogic, this.eventBus);
         this.scoreAdapter = new ScoreAdapter(this.scoreLogic, this.eventBus);
         this.wordValidatorAdapter = new WordValidatorAdapter(this.wordValidator, this.eventBus);
+        this.selectionAdapter = new SelectionAdapter(this.gridLogic, this.eventBus);
         
         // Create InputHandler to manage word tracing
         this.inputHandler = new InputHandler(this.eventBus);

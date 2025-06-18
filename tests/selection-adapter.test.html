@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SelectionAdapter Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        .pass { color: #0f0; }
+        .fail { color: #f00; }
+        .section { margin: 20px 0; padding: 10px; border: 1px solid #0f0; }
+    </style>
+</head>
+<body>
+    <h1>SelectionAdapter Test Suite</h1>
+    <div id="test-results"></div>
+
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { SelectionAdapter } from '../src/adapters/SelectionAdapter.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+        import { GridLogic } from '../src/core/GridLogic.js';
+
+        // Test: Basic initialization
+        test('SelectionAdapter initializes correctly', () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const adapter = new SelectionAdapter(gridLogic, eventBus);
+            
+            Assert.equals(adapter.currentSelection.length, 0, 'Starts with empty selection');
+            Assert.truthy(adapter.gridLogic, 'GridLogic is set');
+            Assert.truthy(adapter.eventBus, 'EventBus is set');
+        });
+
+        // Test: Tracks selection changes
+        test('Tracks SELECTION_CHANGED events', () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const adapter = new SelectionAdapter(gridLogic, eventBus);
+            
+            const tiles = [{x: 0, y: 0}, {x: 1, y: 0}];
+            eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: tiles, timestamp: 1000 });
+            
+            Assert.equals(adapter.currentSelection.length, 2, 'Tracks selection tiles');
+            Assert.equals(adapter.currentSelection[0].x, 0, 'First tile X correct');
+            Assert.equals(adapter.currentSelection[1].x, 1, 'Second tile X correct');
+        });
+
+        // Test: Submits word with real letters
+        test('Submits word with real letters on INPUT_RELEASED', () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const adapter = new SelectionAdapter(gridLogic, eventBus);
+            
+            // Set up grid with test data
+            gridLogic.setTile(0, 0, { letter: 'T', value: 1 });
+            gridLogic.setTile(1, 0, { letter: 'E', value: 1 });
+            gridLogic.setTile(2, 0, { letter: 'S', value: 1 });
+            gridLogic.setTile(3, 0, { letter: 'T', value: 1 });
+            
+            let wordSubmitted = false;
+            let submittedWord = '';
+            let submittedTiles = null;
+            
+            eventBus.on(EventTypes.WORD_SUBMITTED, (data) => {
+                wordSubmitted = true;
+                submittedWord = data.word;
+                submittedTiles = data.tiles;
+            });
+            
+            // Simulate selection
+            const selection = [{x: 0, y: 0}, {x: 1, y: 0}, {x: 2, y: 0}, {x: 3, y: 0}];
+            eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: selection, timestamp: 1000 });
+            
+            // Release input
+            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            
+            Assert.equals(wordSubmitted, true, 'WORD_SUBMITTED event emitted');
+            Assert.equals(submittedWord, 'TEST', 'Correct word submitted');
+            Assert.equals(submittedTiles.length, 4, 'All tiles included');
+            Assert.equals(submittedTiles[0].letter, 'T', 'First tile has correct letter');
+        });
+
+        // Test: Minimum word length
+        test('Does not submit single tile selection', () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const adapter = new SelectionAdapter(gridLogic, eventBus);
+            
+            gridLogic.setTile(0, 0, { letter: 'A', value: 1 });
+            
+            let wordSubmitted = false;
+            eventBus.on(EventTypes.WORD_SUBMITTED, () => {
+                wordSubmitted = true;
+            });
+            
+            // Single tile selection
+            eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: [{x: 0, y: 0}], timestamp: 1000 });
+            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            
+            Assert.equals(wordSubmitted, false, 'No word submitted for single tile');
+        });
+
+        // Test: Handles missing tiles
+        test('Handles positions with no tiles', () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const adapter = new SelectionAdapter(gridLogic, eventBus);
+            
+            // Only set some tiles
+            gridLogic.setTile(0, 0, { letter: 'A', value: 1 });
+            // Position (1,0) has no tile
+            gridLogic.setTile(2, 0, { letter: 'B', value: 1 });
+            
+            let wordSubmitted = false;
+            eventBus.on(EventTypes.WORD_SUBMITTED, () => {
+                wordSubmitted = true;
+            });
+            
+            // Selection includes empty position
+            const selection = [{x: 0, y: 0}, {x: 1, y: 0}, {x: 2, y: 0}];
+            eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: selection, timestamp: 1000 });
+            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            
+            Assert.equals(wordSubmitted, false, 'No word submitted when tiles missing');
+        });
+
+        // Test: Handles tiles without letters
+        test('Handles special tiles without letters', () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const adapter = new SelectionAdapter(gridLogic, eventBus);
+            
+            // Set tiles where one is special without letter
+            gridLogic.setTile(0, 0, { letter: 'A', value: 1 });
+            gridLogic.setTile(1, 0, { type: 'bomb' }); // No letter property
+            gridLogic.setTile(2, 0, { letter: 'B', value: 1 });
+            
+            let wordSubmitted = false;
+            eventBus.on(EventTypes.WORD_SUBMITTED, () => {
+                wordSubmitted = true;
+            });
+            
+            const selection = [{x: 0, y: 0}, {x: 1, y: 0}, {x: 2, y: 0}];
+            eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: selection, timestamp: 1000 });
+            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            
+            Assert.equals(wordSubmitted, false, 'No word submitted when tile has no letter');
+        });
+
+        // Test: Clears selection after submission
+        test('Clears selection after submission', () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const adapter = new SelectionAdapter(gridLogic, eventBus);
+            
+            gridLogic.setTile(0, 0, { letter: 'H', value: 1 });
+            gridLogic.setTile(1, 0, { letter: 'I', value: 1 });
+            
+            // Set selection
+            eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: [{x: 0, y: 0}, {x: 1, y: 0}], timestamp: 1000 });
+            Assert.equals(adapter.currentSelection.length, 2, 'Has selection before release');
+            
+            // Release
+            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            Assert.equals(adapter.currentSelection.length, 0, 'Selection cleared after release');
+        });
+
+        // Test: Empty selection handling
+        test('Handles empty selection', () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const adapter = new SelectionAdapter(gridLogic, eventBus);
+            
+            let wordSubmitted = false;
+            eventBus.on(EventTypes.WORD_SUBMITTED, () => {
+                wordSubmitted = true;
+            });
+            
+            // Empty selection
+            eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: [], timestamp: 1000 });
+            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            
+            Assert.equals(wordSubmitted, false, 'No word submitted for empty selection');
+        });
+
+        // Test: Preserves tile coordinates
+        test('Preserves tile coordinates in submission', () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const adapter = new SelectionAdapter(gridLogic, eventBus);
+            
+            gridLogic.setTile(3, 5, { letter: 'X', value: 8 });
+            gridLogic.setTile(4, 5, { letter: 'Y', value: 4 });
+            
+            let submittedTiles = null;
+            eventBus.on(EventTypes.WORD_SUBMITTED, (data) => {
+                submittedTiles = data.tiles;
+            });
+            
+            eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: [{x: 3, y: 5}, {x: 4, y: 5}], timestamp: 1000 });
+            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            
+            Assert.equals(submittedTiles[0].x, 3, 'First tile X preserved');
+            Assert.equals(submittedTiles[0].y, 5, 'First tile Y preserved');
+            Assert.equals(submittedTiles[1].x, 4, 'Second tile X preserved');
+            Assert.equals(submittedTiles[1].y, 5, 'Second tile Y preserved');
+        });
+    </script>
+</body>
+</html>

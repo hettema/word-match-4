@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "todo/16-SYSTEMS-05-adapter-integration.md",
+                "file": "done/16-SYSTEMS-05-adapter-integration.md",
                 "mode": "preview",
                 "source": false
               },
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "todo/16-SYSTEMS-05-adapter-integration.md",
+                "file": "done/16-SYSTEMS-05-adapter-integration.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -113,7 +113,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "todo/16-SYSTEMS-05-adapter-integration.md",
+                "file": "done/16-SYSTEMS-05-adapter-integration.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -142,7 +142,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "todo/16-SYSTEMS-05-adapter-integration.md",
+                "file": "done/16-SYSTEMS-05-adapter-integration.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -170,16 +170,19 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
-    "todo/17a-ENGINE-03a-input-handler-refactor.md",
     "todo/17-SYSTEMS-06-selection-adapter.md",
+    "done/17-SYSTEMS-06-selection-adapter.md",
+    "tests/selection-adapter.test.html",
+    "src/adapters/SelectionAdapter.js",
+    "done/16-SYSTEMS-05-adapter-integration.md",
+    "todo/19-ENGINE-04-effects-queue.md",
+    "todo/17a-ENGINE-03a-input-handler-refactor.md",
     "todo/18-ENGINE-03-input-handler.md",
     "done/18-ENGINE-03-input-handler.md",
     "tests/input-handler.test.html",
     "src/engine/InputHandler.js",
-    "todo/16-SYSTEMS-05-adapter-integration.md",
     "todo/23-FEATURES-01-word-mechanics.md",
     "done/12-SYSTEMS-01-grid-adapter.md",
-    "todo/19-ENGINE-04-effects-queue.md",
     "todo/17a-ENGINE-02a-tile-integration.md",
     "done/17a-ENGINE-02a-tile-integration.md",
     "src/engine/GameScene.js.backup",
@@ -202,10 +205,7 @@
     "todo/16b-ENGINE-01b-grid-creation.md",
     "todo/16-ENGINE-01-game-scene.md",
     "todo/failed/16-ENGINE-01-game-scene.md",
-    "todo/failed",
     "todo/22-UI-03-game-state-ui.md",
-    "todo/21-UI-02-word-tracer.md",
-    "tests/score-adapter.test.html",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]
