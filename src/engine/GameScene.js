@@ -87,7 +87,7 @@ export class GameScene extends Phaser.Scene {
             if (tile) tile.setSelected(false);
         });
         // Apply new selection
-        this.previousSelection = data.selected || [];
+        this.previousSelection = data.tiles || [];
         this.previousSelection.forEach(pos => {
             const tile = this.tiles[pos.y] && this.tiles[pos.y][pos.x];
             if (tile) tile.setSelected(true);

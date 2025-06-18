@@ -4,6 +4,7 @@ import { EventTypes } from './src/core/EventTypes.js';
 import { WordValidator } from './src/systems/WordValidator.js';
 import { GameScene } from './src/engine/GameScene.js';
 import { GridLogic } from './src/core/GridLogic.js';
+import { InputHandler } from './src/engine/InputHandler.js';
 
 class GameBootstrap {
     constructor() {
@@ -88,6 +89,10 @@ class GameBootstrap {
         // this.scoreAdapter = new ScoreAdapter(this.scoreLogic, this.eventBus);
         // this.wordValidatorAdapter = new WordValidatorAdapter(this.wordValidator, this.eventBus);
         
+        // Create InputHandler to manage word tracing
+        this.inputHandler = new InputHandler(this.eventBus);
+        this.inputHandler.init();
+        
         console.log('Systems initialized (placeholders for now)');
     }
     
@@ -124,31 +129,28 @@ class GameBootstrap {
             if (scene && scene.input) {
                 // Convert Phaser input events to EventBus events IMMEDIATELY
                 scene.input.on('pointerdown', (pointer) => {
-                    // For now, just log since we don't have getTileAt yet
-                    console.log('Pointer down at:', pointer.x, pointer.y);
-                    // When GameScene is implemented:
-                    // const tile = scene.getTileAt(pointer.x, pointer.y);
-                    // if (tile) {
-                    //     this.eventBus.emit(EventTypes.TILE_PRESSED, {
-                    //         x: tile.x,
-                    //         y: tile.y,
-                    //         timestamp: Date.now()
-                    //     });
-                    // }
+                    const tile = scene.getTileAt(pointer.x, pointer.y);
+                    if (tile) {
+                        this.eventBus.emit(EventTypes.TILE_PRESSED, {
+                            x: tile.x,
+                            y: tile.y,
+                            timestamp: Date.now()
+                        });
+                    }
                 });
                 
                 scene.input.on('pointermove', (pointer) => {
-                    // Similar conversion for move events
-                    // if (scene.isTracing) {
-                    //     const tile = scene.getTileAt(pointer.x, pointer.y);
-                    //     if (tile) {
-                    //         this.eventBus.emit(EventTypes.TILE_ENTERED, {
-                    //             x: tile.x,
-                    //             y: tile.y,
-                    //             timestamp: Date.now()
-                    //         });
-                    //     }
-                    // }
+                    // Only emit if pointer is down (dragging)
+                    if (pointer.isDown) {
+                        const tile = scene.getTileAt(pointer.x, pointer.y);
+                        if (tile) {
+                            this.eventBus.emit(EventTypes.TILE_ENTERED, {
+                                x: tile.x,
+                                y: tile.y,
+                                timestamp: Date.now()
+                            });
+                        }
+                    }
                 });
                 
                 scene.input.on('pointerup', () => {
