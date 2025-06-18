@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "todo/19-ENGINE-04-effects-queue.md",
+                "file": "tdd-word-match.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "19-ENGINE-04-effects-queue"
+              "title": "tdd-word-match"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "todo/19-ENGINE-04-effects-queue.md",
+                "file": "tdd-word-match.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 19-ENGINE-04-effects-queue"
+              "title": "Backlinks for tdd-word-match"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "todo/19-ENGINE-04-effects-queue.md",
+                "file": "tdd-word-match.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 19-ENGINE-04-effects-queue"
+              "title": "Outgoing links from tdd-word-match"
             }
           },
           {
@@ -142,13 +142,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "todo/19-ENGINE-04-effects-queue.md",
+                "file": "tdd-word-match.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 19-ENGINE-04-effects-queue"
+              "title": "Outline of tdd-word-match"
             }
           }
         ]
@@ -170,13 +170,17 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "done/19-ENGINE-04-effects-queue.md",
+    "tests/effects-queue.test.html",
+    "src/engine/EffectsQueue.js",
+    "prd-word-match.md",
+    "todo/19-ENGINE-04-effects-queue.md",
     "todo/23-FEATURES-01-word-mechanics.md",
     "todo/26-FEATURES-04-bomb-tile.md",
     "todo/25a-TESTING-04-cascade-stress-tests.md",
     "todo/25-FEATURES-03-cascade-system.md",
     "todo/24-FEATURES-02-explosion-system.md",
     "todo/21-UI-02-word-tracer.md",
-    "todo/19-ENGINE-04-effects-queue.md",
     "done/17-SYSTEMS-06-selection-adapter.md",
     "done/17a-ENGINE-03a-input-handler-refactor.md",
     "todo/17a-ENGINE-03a-input-handler-refactor.md",
@@ -202,10 +206,6 @@
     "todo/16d-ENGINE-01d-selection-effects.md",
     "tests/game-scene-effects.test.html",
     "todo/16c-ENGINE-01c-grid-rendering.md",
-    "done/16c-ENGINE-01c-grid-rendering.md",
-    "done/16b-ENGINE-01b-grid-creation.md",
-    "src/engine/GameScene.js",
-    "src/engine",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]

@@ -28,7 +28,7 @@ export class GridAdapter {
                 source: 'word',
                 timestamp: Date.now()
             });
-            // Don't apply gravity here - wait for all effects to complete
+            // Don't apply gravity here - wait for ANIMATION_COMPLETE from EffectsQueue
         }
     }
     
@@ -41,7 +41,7 @@ export class GridAdapter {
                 source: 'bomb',
                 timestamp: Date.now()
             });
-            // Don't apply gravity here - wait for all effects to complete
+            // Don't apply gravity here - wait for ANIMATION_COMPLETE from EffectsQueue
         }
     }
     

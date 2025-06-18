@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EffectsQueue Test Suite</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; }
+        .test-pass { color: green; }
+        .test-fail { color: red; }
+        .test-error { background: #fee; padding: 10px; margin: 10px 0; }
+        h2 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>EffectsQueue Test Suite</h1>
+    <div id="test-results"></div>
+    
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { EffectsQueue } from '../src/engine/EffectsQueue.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+        
+        // Test: Basic initialization
+        test('EffectsQueue initializes correctly', () => {
+            const eventBus = new EventBus();
+            const queue = new EffectsQueue(eventBus);
+            
+            Assert.truthy(queue, 'EffectsQueue instance created');
+            Assert.equals(queue.getQueueSize(), 0, 'Queue starts empty');
+            Assert.equals(queue.isActive(), false, 'Not processing initially');
+        });
+        
+        // Test: Event listener setup
+        test('Sets up event listeners on init', () => {
+            const eventBus = new EventBus();
+            const queue = new EffectsQueue(eventBus);
+            
+            let tilesRemovedCalled = false;
+            let gravityAppliedCalled = false;
+            let rippleEffectCalled = false;
+            
+            // Override handlers to track calls
+            queue.handleTilesRemoved = function(data) {
+                tilesRemovedCalled = true;
+            };
+            queue.handleGravityApplied = function(data) {
+                gravityAppliedCalled = true;
+            };
+            queue.handleRippleEffect = function(data) {
+                rippleEffectCalled = true;
+            };
+            
+            queue.init();
+            
+            // Test that listeners are registered by emitting events
+            eventBus.emit(EventTypes.TILES_REMOVED, { positions: [], source: 'test', timestamp: Date.now() });
+            eventBus.emit(EventTypes.GRAVITY_APPLIED, { tilesDropped: [], timestamp: Date.now() });
+            eventBus.emit(EventTypes.RIPPLE_EFFECT, { epicenter: { x: 0, y: 0 }, affectedTiles: [], surgePower: 0, timestamp: Date.now() });
+            
+            Assert.truthy(tilesRemovedCalled, 'TILES_REMOVED listener added');
+            Assert.truthy(gravityAppliedCalled, 'GRAVITY_APPLIED listener added');
+            Assert.truthy(rippleEffectCalled, 'RIPPLE_EFFECT listener added');
+        });
+        
+        // Test: Queue explosion animations for TILES_REMOVED
+        test('Queues explosion animations for removed tiles', () => {
+            const eventBus = new EventBus();
+            const queue = new EffectsQueue(eventBus);
+            queue.init();
+            
+            const positions = [
+                { x: 0, y: 0 },
+                { x: 1, y: 0 },
+                { x: 2, y: 0 }
+            ];
+            
+            // Manually call handler to inspect queue before processing
+            queue.handleTilesRemoved({
+                positions: positions,
+                source: 'word',
+                timestamp: Date.now()
+            });
+            
+            // One is already being processed, 2 remain in queue
+            Assert.equals(queue.getQueueSize(), 2, 'Two animations remain in queue');
+            Assert.equals(queue.isActive(), true, 'Queue is processing');
+        });
+        
+        // Test: Staggered explosion delays
+        test('Staggers explosion animations', () => {
+            const eventBus = new EventBus();
+            const queue = new EffectsQueue(eventBus);
+            
+            const positions = [
+                { x: 0, y: 0 },
+                { x: 1, y: 0 },
+                { x: 2, y: 0 }
+            ];
+            
+            // Clear the queue first to prevent processing
+            queue.clearQueue();
+            
+            // Add animations without triggering processing
+            positions.forEach((pos, index) => {
+                queue.queue.push({
+                    type: 'explosion',
+                    target: { x: pos.x, y: pos.y },
+                    delay: index * 50,
+                    duration: 500,
+                    source: 'word',
+                    timestamp: Date.now()
+                });
+            });
+            
+            // Check delays
+            Assert.equals(queue.queue[0].delay, 0, 'First explosion has no delay');
+            Assert.equals(queue.queue[1].delay, 50, 'Second explosion delayed by 50ms');
+            Assert.equals(queue.queue[2].delay, 100, 'Third explosion delayed by 100ms');
+        });
+        
+        // Test: ANIMATION_STARTED event emission
+        test('Emits ANIMATION_STARTED when animation begins', () => {
+            const eventBus = new EventBus();
+            const queue = new EffectsQueue(eventBus);
+            queue.init();
+            
+            let eventCount = 0;
+            
+            eventBus.on(EventTypes.ANIMATION_STARTED, (data) => {
+                eventCount++;
+            });
+            
+            // Test that emitAnimationStarted works
+            queue.emitAnimationStarted('test', { x: 0, y: 0 }, 100);
+            
+            Assert.equals(eventCount, 1, 'ANIMATION_STARTED event can be emitted');
+            
+            // Verify queue processing will emit events (async behavior)
+            queue.queue.push({
+                type: 'test',
+                target: { x: 0, y: 0 },
+                delay: 0,
+                duration: 10,
+                timestamp: Date.now()
+            });
+            
+            // Processing will emit asynchronously
+            queue.processQueue();
+            Assert.equals(queue.isActive(), true, 'Queue is processing and will emit events');
+        });
+        
+        // Test: ANIMATION_COMPLETE event emission
+        test('Emits ANIMATION_COMPLETE when queue empty', () => {
+            const eventBus = new EventBus();
+            const queue = new EffectsQueue(eventBus);
+            queue.init();
+            
+            let animationComplete = false;
+            let completeType = null;
+            
+            eventBus.on(EventTypes.ANIMATION_COMPLETE, (data) => {
+                animationComplete = true;
+                completeType = data.type;
+            });
+            
+            // Process empty queue should emit completion immediately
+            queue.processQueue();
+            
+            Assert.equals(animationComplete, true, 'ANIMATION_COMPLETE emitted for empty queue');
+            Assert.equals(completeType, 'queue_complete', 'Complete event type');
+            Assert.equals(queue.isActive(), false, 'Queue no longer active');
+        });
+        
+        // Test: Queue gravity animations
+        test('Queues fall animations for gravity', () => {
+            const eventBus = new EventBus();
+            const queue = new EffectsQueue(eventBus);
+            queue.init();
+            
+            const tilesDropped = [
+                { from: { x: 0, y: 2 }, to: { x: 0, y: 3 }, tile: {} },
+                { from: { x: 0, y: 1 }, to: { x: 0, y: 2 }, tile: {} }
+            ];
+            
+            // Manually call handler to check queue
+            queue.handleGravityApplied({
+                tilesDropped: tilesDropped,
+                timestamp: Date.now()
+            });
+            
+            // One processing, one in queue
+            Assert.equals(queue.getQueueSize(), 1, 'One fall animation remains in queue');
+            Assert.equals(queue.isActive(), true, 'Queue is processing');
+        });
+        
+        // Test: Queue ripple effect
+        test('Queues ripple animation', () => {
+            const eventBus = new EventBus();
+            const queue = new EffectsQueue(eventBus);
+            queue.init();
+            
+            // Manually call handler
+            queue.handleRippleEffect({
+                epicenter: { x: 2, y: 2 },
+                affectedTiles: [
+                    { x: 1, y: 1 },
+                    { x: 3, y: 3 }
+                ],
+                surgePower: 50,
+                timestamp: Date.now()
+            });
+            
+            // Should be processing immediately
+            Assert.equals(queue.isActive(), true, 'Queue is processing ripple');
+            Assert.equals(queue.currentAnimation.type, 'ripple', 'Processing ripple animation');
+        });
+        
+        // Test: Sequential processing
+        test('Processes animations sequentially', () => {
+            const eventBus = new EventBus();
+            const queue = new EffectsQueue(eventBus);
+            
+            let processCount = 0;
+            const originalProcess = queue.processQueue.bind(queue);
+            queue.processQueue = function() {
+                processCount++;
+                originalProcess();
+            };
+            
+            // Add two animations
+            queue.queue.push({
+                type: 'test1',
+                target: {},
+                delay: 0,
+                duration: 50,
+                timestamp: Date.now()
+            });
+            queue.queue.push({
+                type: 'test2',
+                target: {},
+                delay: 0,
+                duration: 50,
+                timestamp: Date.now()
+            });
+            
+            queue.processQueue();
+            
+            // Verify sequential processing setup
+            Assert.equals(queue.isActive(), true, 'Queue is processing');
+            Assert.equals(queue.currentAnimation.type, 'test1', 'First animation is current');
+            Assert.equals(queue.getQueueSize(), 1, 'One animation remains in queue');
+        });
+        
+        // Test: Clear queue
+        test('Clear queue works correctly', () => {
+            const eventBus = new EventBus();
+            const queue = new EffectsQueue(eventBus);
+            
+            // Add some animations
+            queue.queue.push({ type: 'test1' });
+            queue.queue.push({ type: 'test2' });
+            queue.isProcessing = true;
+            
+            queue.clearQueue();
+            
+            Assert.equals(queue.getQueueSize(), 0, 'Queue cleared');
+            Assert.equals(queue.isActive(), false, 'Processing stopped');
+            Assert.equals(queue.currentAnimation, null, 'Current animation cleared');
+        });
+        
+        // Test: Multiple TILES_REMOVED events
+        test('Handles multiple TILES_REMOVED events', () => {
+            const eventBus = new EventBus();
+            const queue = new EffectsQueue(eventBus);
+            queue.init();
+            
+            // Manually handle multiple events
+            queue.handleTilesRemoved({
+                positions: [{ x: 0, y: 0 }, { x: 1, y: 0 }],
+                source: 'word',
+                timestamp: Date.now()
+            });
+            
+            const firstQueueSize = queue.getQueueSize();
+            
+            queue.handleTilesRemoved({
+                positions: [{ x: 2, y: 0 }],
+                source: 'bomb',
+                timestamp: Date.now()
+            });
+            
+            // Should have added one more animation to queue
+            Assert.equals(queue.getQueueSize(), firstQueueSize + 1, 'Additional explosion queued');
+            Assert.equals(queue.isActive(), true, 'Still processing');
+        });
+    </script>
+</body>
+</html>

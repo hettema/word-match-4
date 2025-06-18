@@ -7,6 +7,7 @@ import { GridLogic } from './src/core/GridLogic.js';
 import { GameLogic } from './src/core/GameLogic.js';
 import { ScoreLogic } from './src/core/ScoreLogic.js';
 import { InputHandler } from './src/engine/InputHandler.js';
+import { EffectsQueue } from './src/engine/EffectsQueue.js';
 import { GridAdapter } from './src/adapters/GridAdapter.js';
 import { WordValidatorAdapter } from './src/adapters/WordValidatorAdapter.js';
 import { GameAdapter } from './src/adapters/GameAdapter.js';
@@ -98,6 +99,10 @@ class GameBootstrap {
         // Create InputHandler to manage word tracing
         this.inputHandler = new InputHandler(this.eventBus);
         this.inputHandler.init();
+        
+        // Create EffectsQueue to manage animations
+        this.effectsQueue = new EffectsQueue(this.eventBus);
+        this.effectsQueue.init();
         
         console.log('Systems initialized - all adapters connected');
     }
