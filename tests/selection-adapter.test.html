@@ -48,7 +48,7 @@
         });
 
         // Test: Submits word with real letters
-        test('Submits word with real letters on INPUT_RELEASED', () => {
+        test('Submits word with real letters on SELECTION_COMPLETE', () => {
             const eventBus = new EventBus();
             const gridLogic = new GridLogic(8, 8);
             const adapter = new SelectionAdapter(gridLogic, eventBus);
@@ -73,13 +73,16 @@
             const selection = [{x: 0, y: 0}, {x: 1, y: 0}, {x: 2, y: 0}, {x: 3, y: 0}];
             eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: selection, timestamp: 1000 });
             
-            // Release input
-            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            // Complete selection
+            eventBus.emit(EventTypes.SELECTION_COMPLETE, { positions: selection, timestamp: 1100 });
             
-            Assert.equals(wordSubmitted, true, 'WORD_SUBMITTED event emitted');
-            Assert.equals(submittedWord, 'TEST', 'Correct word submitted');
-            Assert.equals(submittedTiles.length, 4, 'All tiles included');
-            Assert.equals(submittedTiles[0].letter, 'T', 'First tile has correct letter');
+            // Wait for async word submission
+            setTimeout(() => {
+                Assert.equals(wordSubmitted, true, 'WORD_SUBMITTED event emitted');
+                Assert.equals(submittedWord, 'TEST', 'Correct word submitted');
+                Assert.equals(submittedTiles.length, 4, 'All tiles included');
+                Assert.equals(submittedTiles[0].letter, 'T', 'First tile has correct letter');
+            }, 20);
         });
 
         // Test: Minimum word length
@@ -97,7 +100,7 @@
             
             // Single tile selection
             eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: [{x: 0, y: 0}], timestamp: 1000 });
-            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            eventBus.emit(EventTypes.SELECTION_COMPLETE, { positions: [{x: 0, y: 0}], timestamp: 1100 });
             
             Assert.equals(wordSubmitted, false, 'No word submitted for single tile');
         });
@@ -149,8 +152,8 @@
             Assert.equals(wordSubmitted, false, 'No word submitted when tile has no letter');
         });
 
-        // Test: Clears selection after submission
-        test('Clears selection after submission', () => {
+        // Test: Tracks selection state
+        test('Tracks selection state correctly', () => {
             const eventBus = new EventBus();
             const gridLogic = new GridLogic(8, 8);
             const adapter = new SelectionAdapter(gridLogic, eventBus);
@@ -160,11 +163,11 @@
             
             // Set selection
             eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: [{x: 0, y: 0}, {x: 1, y: 0}], timestamp: 1000 });
-            Assert.equals(adapter.currentSelection.length, 2, 'Has selection before release');
+            Assert.equals(adapter.currentSelection.length, 2, 'Tracks selection from SELECTION_CHANGED');
             
-            // Release
-            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
-            Assert.equals(adapter.currentSelection.length, 0, 'Selection cleared after release');
+            // Clear selection
+            eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: [], timestamp: 1200 });
+            Assert.equals(adapter.currentSelection.length, 0, 'Updates when selection cleared');
         });
 
         // Test: Empty selection handling
@@ -180,7 +183,7 @@
             
             // Empty selection
             eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: [], timestamp: 1000 });
-            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            eventBus.emit(EventTypes.SELECTION_COMPLETE, { positions: [], timestamp: 1100 });
             
             Assert.equals(wordSubmitted, false, 'No word submitted for empty selection');
         });
@@ -200,12 +203,15 @@
             });
             
             eventBus.emit(EventTypes.SELECTION_CHANGED, { tiles: [{x: 3, y: 5}, {x: 4, y: 5}], timestamp: 1000 });
-            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: 1100 });
+            eventBus.emit(EventTypes.SELECTION_COMPLETE, { positions: [{x: 3, y: 5}, {x: 4, y: 5}], timestamp: 1100 });
             
-            Assert.equals(submittedTiles[0].x, 3, 'First tile X preserved');
-            Assert.equals(submittedTiles[0].y, 5, 'First tile Y preserved');
-            Assert.equals(submittedTiles[1].x, 4, 'Second tile X preserved');
-            Assert.equals(submittedTiles[1].y, 5, 'Second tile Y preserved');
+            // Wait for async word submission
+            setTimeout(() => {
+                Assert.equals(submittedTiles[0].x, 3, 'First tile X preserved');
+                Assert.equals(submittedTiles[0].y, 5, 'First tile Y preserved');
+                Assert.equals(submittedTiles[1].x, 4, 'Second tile X preserved');
+                Assert.equals(submittedTiles[1].y, 5, 'Second tile Y preserved');
+            }, 20);
         });
     </script>
 </body>

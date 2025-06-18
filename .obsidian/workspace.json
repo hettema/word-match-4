@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "done/17-SYSTEMS-06-selection-adapter.md",
+                "file": "todo/19-ENGINE-04-effects-queue.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "17-SYSTEMS-06-selection-adapter"
+              "title": "19-ENGINE-04-effects-queue"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "done/17-SYSTEMS-06-selection-adapter.md",
+                "file": "todo/19-ENGINE-04-effects-queue.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 17-SYSTEMS-06-selection-adapter"
+              "title": "Backlinks for 19-ENGINE-04-effects-queue"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "done/17-SYSTEMS-06-selection-adapter.md",
+                "file": "todo/19-ENGINE-04-effects-queue.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 17-SYSTEMS-06-selection-adapter"
+              "title": "Outgoing links from 19-ENGINE-04-effects-queue"
             }
           },
           {
@@ -142,13 +142,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "done/17-SYSTEMS-06-selection-adapter.md",
+                "file": "todo/19-ENGINE-04-effects-queue.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 17-SYSTEMS-06-selection-adapter"
+              "title": "Outline of 19-ENGINE-04-effects-queue"
             }
           }
         ]
@@ -170,19 +170,24 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "todo/23-FEATURES-01-word-mechanics.md",
+    "todo/26-FEATURES-04-bomb-tile.md",
+    "todo/25a-TESTING-04-cascade-stress-tests.md",
+    "todo/25-FEATURES-03-cascade-system.md",
+    "todo/24-FEATURES-02-explosion-system.md",
+    "todo/21-UI-02-word-tracer.md",
+    "todo/19-ENGINE-04-effects-queue.md",
+    "done/17-SYSTEMS-06-selection-adapter.md",
     "done/17a-ENGINE-03a-input-handler-refactor.md",
     "todo/17a-ENGINE-03a-input-handler-refactor.md",
     "done/16-SYSTEMS-05-adapter-integration.md",
     "todo/17-SYSTEMS-06-selection-adapter.md",
-    "done/17-SYSTEMS-06-selection-adapter.md",
     "tests/selection-adapter.test.html",
     "src/adapters/SelectionAdapter.js",
-    "todo/19-ENGINE-04-effects-queue.md",
     "todo/18-ENGINE-03-input-handler.md",
     "done/18-ENGINE-03-input-handler.md",
     "tests/input-handler.test.html",
     "src/engine/InputHandler.js",
-    "todo/23-FEATURES-01-word-mechanics.md",
     "done/12-SYSTEMS-01-grid-adapter.md",
     "todo/17a-ENGINE-02a-tile-integration.md",
     "done/17a-ENGINE-02a-tile-integration.md",
@@ -199,13 +204,8 @@
     "todo/16c-ENGINE-01c-grid-rendering.md",
     "done/16c-ENGINE-01c-grid-rendering.md",
     "done/16b-ENGINE-01b-grid-creation.md",
-    "todo/16a-ENGINE-01a-event-listeners.md",
-    "done/16a-ENGINE-01a-event-listeners.md",
     "src/engine/GameScene.js",
     "src/engine",
-    "todo/16b-ENGINE-01b-grid-creation.md",
-    "todo/16-ENGINE-01-game-scene.md",
-    "todo/failed/16-ENGINE-01-game-scene.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]
