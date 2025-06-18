@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameScene Visual Effects Tests</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #2c3e50; }
+        .back-link { color: #3498db; text-decoration: none; }
+        #phaser-container { margin: 20px 0; border: 2px solid #34495e; display: inline-block; }
+        .test-controls { margin: 20px 0; }
+        button { margin: 5px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        .info { background: #ecf0f1; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Test Suite</a>
+        <h1>GameScene Visual Effects Tests</h1>
+        
+        <div class="info">
+            <p>This test creates a minimal Phaser game to verify the visual effects implemented in ENGINE-01d.</p>
+            <p>Click the buttons below to trigger different visual effects and verify they work correctly.</p>
+        </div>
+        
+        <div id="phaser-container"></div>
+        
+        <div class="test-controls">
+            <h2>Test Visual Effects:</h2>
+            <button onclick="testSelection()">Test Selection Effect</button>
+            <button onclick="testExplosions()">Test Explosion Effect</button>
+            <button onclick="testDestabilization(1)">Test Destabilization Level 1</button>
+            <button onclick="testDestabilization(2)">Test Destabilization Level 2 (Wobble)</button>
+            <button onclick="testDestabilization(3)">Test Destabilization Level 3 (Shake)</button>
+            <button onclick="clearEffects()">Clear All Effects</button>
+        </div>
+        
+        <div id="test-results"></div>
+    </div>
+
+    <script src="../lib/phaser.min.js"></script>
+    <script type="module">
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+        import { GameScene } from '../src/engine/GameScene.js';
+        
+        // Create minimal game for testing
+        const eventBus = new EventBus();
+        const gridLogic = { width: 4, height: 4 }; // Small grid for testing
+        
+        const config = {
+            type: Phaser.AUTO,
+            width: 320,
+            height: 320,
+            parent: 'phaser-container',
+            backgroundColor: '#2c3e50',
+            scene: GameScene
+        };
+        
+        const game = new Phaser.Game(config);
+        
+        // Wait for game to be ready
+        game.events.once('ready', () => {
+            game.registry.set('eventBus', eventBus);
+            game.registry.set('gridLogic', gridLogic);
+            
+            // Create test grid data
+            const testGrid = [
+                [{letter:'A',value:1,type:'normal'}, {letter:'B',value:3,type:'normal'}, {letter:'C',value:3,type:'normal'}, {type:'bomb'}],
+                [{letter:'D',value:2,type:'normal'}, {letter:'E',value:1,type:'normal'}, {type:'ice'}, {type:'stone'}],
+                [{letter:'F',value:4,type:'normal'}, {type:'multiplier'}, {letter:'G',value:2,type:'normal'}, {type:'hidden'}],
+                [{letter:'H',value:4,type:'normal'}, {letter:'I',value:1,type:'normal'}, {letter:'J',value:8,type:'normal'}, {letter:'K',value:5,type:'normal'}]
+            ];
+            
+            // Emit initial grid
+            setTimeout(() => {
+                eventBus.emit(EventTypes.GRID_UPDATED, { grid: testGrid });
+            }, 100);
+        });
+        
+        // Test functions exposed globally
+        window.testSelection = function() {
+            // Select tiles in a diagonal pattern
+            const selected = [
+                {x: 0, y: 0},
+                {x: 1, y: 1},
+                {x: 2, y: 2}
+            ];
+            eventBus.emit(EventTypes.SELECTION_CHANGED, { selected });
+            console.log('Selection effect triggered for positions:', selected);
+        };
+        
+        window.testExplosions = function() {
+            // Explode some tiles
+            const positions = [
+                {x: 0, y: 0},
+                {x: 1, y: 0},
+                {x: 2, y: 0}
+            ];
+            eventBus.emit(EventTypes.TILES_REMOVED, { positions });
+            console.log('Explosion effect triggered for positions:', positions);
+        };
+        
+        window.testDestabilization = function(level) {
+            // Test destabilization on bottom row
+            const tile = {
+                x: 1,
+                y: 3,
+                surgeCount: level
+            };
+            eventBus.emit(EventTypes.TILE_DESTABILIZED, { tile });
+            console.log(`Destabilization level ${level} triggered for tile:`, tile);
+        };
+        
+        window.clearEffects = function() {
+            // Clear selection
+            eventBus.emit(EventTypes.SELECTION_CHANGED, { selected: [] });
+            
+            // Clear destabilization
+            for (let x = 0; x < 4; x++) {
+                for (let y = 0; y < 4; y++) {
+                    eventBus.emit(EventTypes.TILE_DESTABILIZED, { 
+                        tile: { x, y, surgeCount: 0 } 
+                    });
+                }
+            }
+            
+            // Re-render grid to restore exploded tiles
+            const testGrid = [
+                [{letter:'A',value:1,type:'normal'}, {letter:'B',value:3,type:'normal'}, {letter:'C',value:3,type:'normal'}, {type:'bomb'}],
+                [{letter:'D',value:2,type:'normal'}, {letter:'E',value:1,type:'normal'}, {type:'ice'}, {type:'stone'}],
+                [{letter:'F',value:4,type:'normal'}, {type:'multiplier'}, {letter:'G',value:2,type:'normal'}, {type:'hidden'}],
+                [{letter:'H',value:4,type:'normal'}, {letter:'I',value:1,type:'normal'}, {letter:'J',value:8,type:'normal'}, {letter:'K',value:5,type:'normal'}]
+            ];
+            eventBus.emit(EventTypes.GRID_UPDATED, { grid: testGrid });
+            console.log('All effects cleared');
+        };
+    </script>
+</body>
+</html>

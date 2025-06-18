@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "todo/16d-ENGINE-01d-selection-effects.md",
+                "file": "todo/16e-ENGINE-01e-integration-tests.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "16d-ENGINE-01d-selection-effects"
+              "title": "16e-ENGINE-01e-integration-tests"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "todo/16d-ENGINE-01d-selection-effects.md",
+                "file": "todo/16e-ENGINE-01e-integration-tests.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 16d-ENGINE-01d-selection-effects"
+              "title": "Backlinks for 16e-ENGINE-01e-integration-tests"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "todo/16d-ENGINE-01d-selection-effects.md",
+                "file": "todo/16e-ENGINE-01e-integration-tests.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 16d-ENGINE-01d-selection-effects"
+              "title": "Outgoing links from 16e-ENGINE-01e-integration-tests"
             }
           },
           {
@@ -142,13 +142,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "todo/16d-ENGINE-01d-selection-effects.md",
+                "file": "todo/16e-ENGINE-01e-integration-tests.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 16d-ENGINE-01d-selection-effects"
+              "title": "Outline of 16e-ENGINE-01e-integration-tests"
             }
           }
         ]
@@ -170,6 +170,12 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "done/16d-ENGINE-01d-selection-effects.md",
+    "todo/16d-ENGINE-01d-selection-effects.md",
+    "tests/game-scene-effects.test.html",
+    "todo/17-ENGINE-02-tile-visual.md",
+    "todo/18-ENGINE-03-input-handler.md",
+    "todo/16e-ENGINE-01e-integration-tests.md",
     "todo/23-FEATURES-01-word-mechanics.md",
     "todo/16c-ENGINE-01c-grid-rendering.md",
     "done/16c-ENGINE-01c-grid-rendering.md",
@@ -178,8 +184,6 @@
     "done/16a-ENGINE-01a-event-listeners.md",
     "src/engine/GameScene.js",
     "src/engine",
-    "todo/16e-ENGINE-01e-integration-tests.md",
-    "todo/16d-ENGINE-01d-selection-effects.md",
     "todo/16b-ENGINE-01b-grid-creation.md",
     "todo/16-ENGINE-01-game-scene.md",
     "todo/failed/16-ENGINE-01-game-scene.md",
@@ -188,8 +192,6 @@
     "todo/21-UI-02-word-tracer.md",
     "todo/20-UI-01-hud-implementation.md",
     "todo/19-ENGINE-04-effects-queue.md",
-    "todo/18-ENGINE-03-input-handler.md",
-    "todo/17-ENGINE-02-tile-visual.md",
     "tests/game-scene.test.html",
     "todo/15-SYSTEMS-04-score-adapter.md",
     "done/15-SYSTEMS-04-score-adapter.md",
@@ -202,10 +204,8 @@
     "todo/13-SYSTEMS-02-word-validator-adapter.md",
     "done/13-SYSTEMS-02-word-validator-adapter.md",
     "tests/word-validator-adapter.test.html",
-    "src/adapters/WordValidatorAdapter.js",
     "todo/12-SYSTEMS-01-grid-adapter.md",
     "done/12-SYSTEMS-01-grid-adapter.md",
-    "done/11-CORE-05-game-state-machine.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]
