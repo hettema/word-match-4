@@ -2,6 +2,30 @@
 
 This file contains important information for Claude (AI assistant) when working on this project.
 
+## Tile.js Integration (ENGINE-02a Complete)
+
+### Overview
+GameScene now uses Tile.js instances instead of inline sprite management. Each tile manages its own visual state.
+
+### Key Changes
+- `tileSprites` array → `tiles` array of Tile instances
+- Tile color/display logic moved to Tile.js
+- Visual effects handled through Tile methods:
+  - `tile.setSelected(bool)` - Selection state
+  - `tile.updateDestabilizationVisual()` - Surge effects
+  - `tile.setHovered(bool)` - Hover state
+
+### Integration Points for Future Tasks
+- **InputHandler**: Use `tile.setSelected()` and `tile.setHovered()`
+- **EffectsQueue**: Coordinate with Tile animation methods
+- **Word Tracer**: Access `tile.worldX`, `tile.worldY` for positions
+- **Special Tiles**: Types already defined in Tile.js TILE_TYPES
+
+### Important Notes
+- Tiles handle their own pointer events
+- GameScene coordinates Tile instances via grid position
+- All visual state managed by individual Tile objects
+
 ## Known Issues
 
 ### Contract Validator Complex Types
