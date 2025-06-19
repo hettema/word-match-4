@@ -10,7 +10,7 @@ export class GameAdapter {
         // Listen for game-related events
         eventBus.on(EventTypes.GAME_START, this.handleGameStart.bind(this));
         eventBus.on(EventTypes.SCORE_CHANGED, this.handleScoreChanged.bind(this));
-        eventBus.on(EventTypes.MOVES_CHANGED, this.handleMovesChanged.bind(this));
+        eventBus.on(EventTypes.WORD_VALIDATED, this.handleWordValidated.bind(this));
     }
     
     handleGameStart(data) {
@@ -20,7 +20,7 @@ export class GameAdapter {
         // Initialize level with configuration
         const levelConfig = {
             id: level,
-            moveLimit: 20, // Default, should come from level data
+            moveLimit: 30, // Default, should come from level data
             targetScore: 1000 // Default, should come from level data
         };
         
@@ -55,14 +55,22 @@ export class GameAdapter {
         }
     }
     
-    handleMovesChanged(data) {
-        const { moves, movesUsed, timestamp } = data;
+    handleWordValidated(data) {
+        const { word, score, tiles, timestamp } = data;
         
-        // Consume a move
+        // Consume a move when a word is validated
         const result = this.gameLogic.consumeMove();
         
         if (result.success) {
             this.gameLogic.updateState(result.state);
+            
+            // Emit moves changed event (showing remaining moves)
+            const remainingMoves = result.state.movesLimit - result.state.moves;
+            this.eventBus.emit(EventTypes.MOVES_CHANGED, {
+                moves: remainingMoves,
+                movesUsed: result.state.moves,
+                timestamp: timestamp || Date.now()
+            });
             
             // Check defeat condition after move
             const defeatCheck = this.gameLogic.checkDefeat();

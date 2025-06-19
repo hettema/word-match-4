@@ -13,6 +13,7 @@ import { WordValidatorAdapter } from './src/adapters/WordValidatorAdapter.js';
 import { GameAdapter } from './src/adapters/GameAdapter.js';
 import { ScoreAdapter } from './src/adapters/ScoreAdapter.js';
 import { SelectionAdapter } from './src/adapters/SelectionAdapter.js';
+import HUD from './src/ui/HUD.js';
 
 class GameBootstrap {
     constructor() {
@@ -104,6 +105,9 @@ class GameBootstrap {
         this.effectsQueue = new EffectsQueue(this.eventBus);
         this.effectsQueue.init();
         
+        // Create HUD for UI display
+        this.hud = new HUD(this.eventBus);
+        
         console.log('Systems initialized - all adapters connected');
     }
     
@@ -177,6 +181,29 @@ class GameBootstrap {
         console.log('Starting game');
         this.eventBus.emit(EventTypes.GAME_START, { 
             level: 1,
+            timestamp: Date.now()
+        });
+        
+        // Emit level loaded event to set up HUD
+        this.eventBus.emit(EventTypes.LEVEL_LOADED, {
+            levelId: 1,
+            config: {
+                targetScore: 1000,
+                moves: 30
+            },
+            timestamp: Date.now()
+        });
+        
+        // Initialize score and moves
+        this.eventBus.emit(EventTypes.SCORE_CHANGED, {
+            score: 0,
+            delta: 0,
+            source: 'init'
+        });
+        
+        this.eventBus.emit(EventTypes.MOVES_CHANGED, {
+            moves: 30,
+            movesUsed: 0,
             timestamp: Date.now()
         });
         
