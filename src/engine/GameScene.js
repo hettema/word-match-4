@@ -23,6 +23,7 @@ export class GameScene extends Phaser.Scene {
         this.eventBus.on(EventTypes.SELECTION_CHANGED, (data) => this.renderSelection(data));
         this.eventBus.on(EventTypes.TILES_REMOVED, (data) => this.animateExplosions(data));
         this.eventBus.on(EventTypes.TILE_DESTABILIZED, (data) => this.renderDestabilization(data));
+        this.eventBus.on(EventTypes.RIPPLE_EFFECT, (data) => this.animateRippleEffect(data));
         this.eventBus.on(EventTypes.ANIMATION_STARTED, (data) => this.handleAnimationStarted(data));
         this.eventBus.on(EventTypes.ANIMATION_COMPLETE, (data) => this.handleAnimationComplete(data));
         this.eventBus.on(EventTypes.WORD_REJECTED, () => this.handleWordRejected());
@@ -139,9 +140,51 @@ export class GameScene extends Phaser.Scene {
         if (!tile) return;
         
         // Update tile's surge count and visual
-        tile.surgeCount = tileData.surgeCount || 0;
+        tile.surgeCount = data.surgeLevel || 0;
         tile.updateDestabilizationVisual();
     }
+    
+    animateRippleEffect(data) {
+        const { epicenter, affectedTiles } = data;
+        if (!epicenter) return;
+        
+        // Find the epicenter tile for position
+        const epicenterTile = this.tiles[epicenter.y] && this.tiles[epicenter.y][epicenter.x];
+        if (!epicenterTile) return;
+        
+        // Create expanding ring effect from epicenter
+        const ring = this.add.circle(epicenterTile.worldX, epicenterTile.worldY, 30);
+        ring.setStrokeStyle(3, 0x00d9ff); // Cyan color
+        ring.setAlpha(0.8);
+        
+        this.tweens.add({
+            targets: ring,
+            scale: 3,
+            alpha: 0,
+            duration: 600,
+            ease: 'Power2',
+            onComplete: () => ring.destroy()
+        });
+        
+        // Visual feedback on affected tiles
+        affectedTiles.forEach((tilePos, index) => {
+            this.time.delayedCall(index * 30, () => {
+                const tile = this.tiles[tilePos.y] && this.tiles[tilePos.y][tilePos.x];
+                if (tile && tile.sprite) {
+                    // Quick flash effect
+                    this.tweens.add({
+                        targets: tile.sprite,
+                        scaleX: 1.1,
+                        scaleY: 1.1,
+                        duration: 150,
+                        yoyo: true,
+                        ease: 'Power2'
+                    });
+                }
+            });
+        });
+    }
+    
     handleAnimationStarted(data) { }
     handleAnimationComplete(data) { }
     

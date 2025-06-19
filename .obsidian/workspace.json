@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "todo/25a-TESTING-04-cascade-stress-tests.md",
+                "file": "todo/25-FEATURES-03-cascade-system.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "25a-TESTING-04-cascade-stress-tests"
+              "title": "25-FEATURES-03-cascade-system"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "todo/25a-TESTING-04-cascade-stress-tests.md",
+                "file": "todo/25-FEATURES-03-cascade-system.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 25a-TESTING-04-cascade-stress-tests"
+              "title": "Backlinks for 25-FEATURES-03-cascade-system"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "todo/25a-TESTING-04-cascade-stress-tests.md",
+                "file": "todo/25-FEATURES-03-cascade-system.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 25a-TESTING-04-cascade-stress-tests"
+              "title": "Outgoing links from 25-FEATURES-03-cascade-system"
             }
           },
           {
@@ -142,13 +142,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "todo/25a-TESTING-04-cascade-stress-tests.md",
+                "file": "todo/25-FEATURES-03-cascade-system.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 25a-TESTING-04-cascade-stress-tests"
+              "title": "Outline of 25-FEATURES-03-cascade-system"
             }
           }
         ]
@@ -170,11 +170,17 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "todo/24-FEATURES-02-explosion-system.md",
+    "done/24-FEATURES-02-explosion-system.md",
+    "tests/features-02-explosion-system.test.html",
+    "tests/visual-effects-verification.test.html",
+    "todo/25-FEATURES-03-cascade-system.md",
+    "tests/cascade-stress.test.html",
+    "todo/25a-TESTING-04-cascade-stress-tests.md",
     "todo/23-FEATURES-01-word-mechanics.md",
     "done/23-FEATURES-01-word-mechanics.md",
     "tests/features-01-word-mechanics.test.html",
     "done/22-UI-03-game-state-ui.md",
-    "todo/25a-TESTING-04-cascade-stress-tests.md",
     "todo/22-UI-03-game-state-ui.md",
     "tests/game-state-ui.test.html",
     "src/ui/GameStateUI.js",
@@ -187,7 +193,6 @@
     "done/20-UI-01-hud-implementation.md",
     "tests/hud.test.html",
     "src/ui/HUD.js",
-    "src/ui",
     "todo/36-TESTING-03-browser-compatibility.md",
     "todo/35-POLISH-03-mobile-responsiveness.md",
     "todo/34-POLISH-02-performance-optimization.md",
@@ -201,11 +206,6 @@
     "todo/27-FEATURES-04-bomb-tile.md",
     "todo/26-FEATURES-09-level-system.md",
     "todo/30a-POLISH-00-sound-system.md",
-    "todo/26a-FEATURES-09-level-system.md",
-    "tdd-word-match.md",
-    "tests/effects-queue.test.html",
-    "src/engine/EffectsQueue.js",
-    "prd-word-match.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]

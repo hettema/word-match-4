@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FEATURES-02: Explosion System Tests</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <h1>FEATURES-02: Explosion System Tests</h1>
+    <div id="test-results"></div>
+    
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+        import { GridLogic } from '../src/core/GridLogic.js';
+        import { GridAdapter } from '../src/adapters/GridAdapter.js';
+        import { EffectsQueue } from '../src/engine/EffectsQueue.js';
+
+        // Test 1: Tiles are removed when word is validated
+        test('FEATURES-02: Tiles removed on word validation', async () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const gridAdapter = new GridAdapter(gridLogic, eventBus);
+            
+            // Set up test grid
+            const testGrid = gridLogic.createEmptyGrid();
+            testGrid[0][0] = { letter: 'C', value: 3, type: 'normal' };
+            testGrid[0][1] = { letter: 'A', value: 1, type: 'normal' };
+            testGrid[0][2] = { letter: 'T', value: 1, type: 'normal' };
+            gridLogic.updateGrid(testGrid);
+            
+            let tilesRemoved = null;
+            eventBus.on(EventTypes.TILES_REMOVED, (data) => {
+                tilesRemoved = data;
+            });
+            
+            // Emit word validated
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'CAT',
+                score: 5,
+                tiles: [
+                    { x: 0, y: 0, letter: 'C' },
+                    { x: 1, y: 0, letter: 'A' },
+                    { x: 2, y: 0, letter: 'T' }
+                ],
+                timestamp: Date.now()
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 10));
+            
+            Assert.truthy(tilesRemoved, 'TILES_REMOVED event should be emitted');
+            Assert.equals(tilesRemoved.positions.length, 3, 'Should remove 3 tiles');
+            Assert.equals(tilesRemoved.source, 'word', 'Source should be "word"');
+        });
+
+        // Test 2: Ripple effects are calculated correctly
+        test('FEATURES-02: Ripple effects calculated with spread percentage', () => {
+            const gridLogic = new GridLogic(8, 8);
+            
+            // Create a full grid
+            const testGrid = gridLogic.createEmptyGrid();
+            for (let y = 0; y < 8; y++) {
+                for (let x = 0; x < 8; x++) {
+                    testGrid[y][x] = { letter: 'A', value: 1, type: 'normal' };
+                }
+            }
+            gridLogic.updateGrid(testGrid);
+            
+            // Test ripple calculation from center tile
+            const epicenters = [{ x: 4, y: 4 }];
+            const spreadPercentage = 0.5;
+            
+            const ripples = gridLogic.calculateRipples(epicenters, spreadPercentage);
+            
+            // Center tile should affect 8 neighbors, 50% = 4 tiles
+            Assert.equals(ripples.length, 4, 'Should affect 4 tiles (50% of 8 neighbors)');
+            
+            // All ripples should be neighbors of epicenter
+            ripples.forEach(ripple => {
+                const dx = Math.abs(ripple.x - 4);
+                const dy = Math.abs(ripple.y - 4);
+                Assert.truthy(dx <= 1 && dy <= 1 && (dx + dy) > 0, 'Ripple should be adjacent to epicenter');
+            });
+        });
+
+        // Test 3: Ripple effects trigger surge tracking
+        test('FEATURES-02: Ripple effects emit with surge power', async () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const gridAdapter = new GridAdapter(gridLogic, eventBus);
+            
+            // Set up test grid
+            const testGrid = gridLogic.createEmptyGrid();
+            for (let i = 0; i < 5; i++) {
+                testGrid[0][i] = { letter: 'A', value: 1, type: 'normal' };
+            }
+            gridLogic.updateGrid(testGrid);
+            
+            let rippleEvent = null;
+            eventBus.on(EventTypes.RIPPLE_EFFECT, (data) => {
+                rippleEvent = data;
+            });
+            
+            // Trigger word validation to cause ripples
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'AAA',
+                score: 3,
+                tiles: [
+                    { x: 0, y: 0, letter: 'A' },
+                    { x: 1, y: 0, letter: 'A' },
+                    { x: 2, y: 0, letter: 'A' }
+                ],
+                timestamp: Date.now()
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 10));
+            
+            Assert.truthy(rippleEvent, 'RIPPLE_EFFECT event should be emitted');
+            Assert.truthy(rippleEvent.affectedTiles.length > 0, 'Should have affected tiles');
+            Assert.equals(rippleEvent.surgePower, 1, 'Should have surge power of 1');
+        });
+
+        // Test 4: Destabilized tiles trigger chain reactions
+        test('FEATURES-02: Destabilized tiles trigger chain reactions', async () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const gridAdapter = new GridAdapter(gridLogic, eventBus);
+            
+            // Set up test grid
+            const testGrid = gridLogic.createEmptyGrid();
+            testGrid[3][3] = { letter: 'X', value: 8, type: 'normal' };
+            gridLogic.updateGrid(testGrid);
+            
+            let chainReactionStarted = false;
+            let tilesRemovedFromDestabilization = null;
+            
+            eventBus.on(EventTypes.CHAIN_REACTION_STARTED, () => {
+                chainReactionStarted = true;
+            });
+            
+            eventBus.on(EventTypes.TILES_REMOVED, (data) => {
+                if (data.source === 'destabilization') {
+                    tilesRemovedFromDestabilization = data;
+                }
+            });
+            
+            // Emit tile destabilized
+            eventBus.emit(EventTypes.TILE_DESTABILIZED, {
+                tile: { x: 3, y: 3 },
+                surgeLevel: 3,
+                source: 'ripple'
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 10));
+            
+            Assert.truthy(chainReactionStarted, 'CHAIN_REACTION_STARTED should be emitted');
+            Assert.truthy(tilesRemovedFromDestabilization, 'TILES_REMOVED should be emitted for destabilization');
+            Assert.equals(tilesRemovedFromDestabilization.source, 'destabilization', 'Source should be destabilization');
+        });
+
+        // Test 5: Chain reactions create new ripples
+        test('FEATURES-02: Chain reactions create new ripples', async () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const gridAdapter = new GridAdapter(gridLogic, eventBus);
+            
+            // Set up test grid with tiles around center
+            const testGrid = gridLogic.createEmptyGrid();
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    testGrid[3 + dy][3 + dx] = { letter: 'B', value: 3, type: 'normal' };
+                }
+            }
+            gridLogic.updateGrid(testGrid);
+            
+            let rippleCount = 0;
+            eventBus.on(EventTypes.RIPPLE_EFFECT, () => {
+                rippleCount++;
+            });
+            
+            // Trigger destabilization at center
+            eventBus.emit(EventTypes.TILE_DESTABILIZED, {
+                tile: { x: 3, y: 3 },
+                surgeLevel: 3,
+                source: 'ripple'
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 10));
+            
+            Assert.truthy(rippleCount > 0, 'Chain reaction should create new ripples');
+        });
+
+        // Test 6: EffectsQueue manages animation timing
+        test('FEATURES-02: EffectsQueue processes animations in order', async () => {
+            const eventBus = new EventBus();
+            const effectsQueue = new EffectsQueue(eventBus);
+            effectsQueue.init();
+            
+            const animationOrder = [];
+            eventBus.on(EventTypes.ANIMATION_STARTED, (data) => {
+                animationOrder.push(data.type);
+            });
+            
+            // Emit multiple events that trigger animations
+            eventBus.emit(EventTypes.TILES_REMOVED, {
+                positions: [{ x: 0, y: 0 }, { x: 1, y: 0 }],
+                source: 'word',
+                timestamp: Date.now()
+            });
+            
+            eventBus.emit(EventTypes.RIPPLE_EFFECT, {
+                epicenter: { x: 0, y: 0 },
+                affectedTiles: [{ x: 1, y: 1 }],
+                surgePower: 1,
+                timestamp: Date.now()
+            });
+            
+            // Wait for animations to process
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            Assert.truthy(animationOrder.includes('explosion'), 'Should have explosion animation');
+            Assert.truthy(animationOrder.includes('ripple'), 'Should have ripple animation');
+        });
+
+        // Test 7: Animation complete triggers gravity
+        test('FEATURES-02: Animation complete triggers gravity', async () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const gridAdapter = new GridAdapter(gridLogic, eventBus);
+            const effectsQueue = new EffectsQueue(eventBus);
+            effectsQueue.init();
+            
+            // Set up grid with gap
+            const testGrid = gridLogic.createEmptyGrid();
+            testGrid[0][0] = { letter: 'A', value: 1, type: 'normal' };
+            testGrid[2][0] = { letter: 'B', value: 3, type: 'normal' };
+            gridLogic.updateGrid(testGrid);
+            
+            let gravityApplied = false;
+            eventBus.on(EventTypes.GRAVITY_APPLIED, () => {
+                gravityApplied = true;
+            });
+            
+            // Trigger removal which should eventually trigger gravity
+            eventBus.emit(EventTypes.TILES_REMOVED, {
+                positions: [{ x: 0, y: 1 }],
+                source: 'test',
+                timestamp: Date.now()
+            });
+            
+            // Wait for effect queue to complete
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            Assert.truthy(gravityApplied, 'Gravity should be applied after animations complete');
+        });
+
+        // Test 8: Cascade stress test - maximum cascade
+        test('FEATURES-02: Cascade stress test - handles full grid explosion', async () => {
+            const eventBus = new EventBus();
+            eventBus.enableLogging = false; // Disable logging for performance
+            const gridLogic = new GridLogic(8, 8);
+            const gridAdapter = new GridAdapter(gridLogic, eventBus);
+            
+            // Fill entire grid
+            const testGrid = gridLogic.createEmptyGrid();
+            for (let y = 0; y < 8; y++) {
+                for (let x = 0; x < 8; x++) {
+                    testGrid[y][x] = { letter: 'X', value: 8, type: 'normal' };
+                }
+            }
+            gridLogic.updateGrid(testGrid);
+            
+            const startTime = performance.now();
+            let explosionCount = 0;
+            let maxConcurrentEvents = 0;
+            let currentEventCount = 0;
+            
+            // Track metrics
+            eventBus.on('*', (type) => {
+                currentEventCount++;
+                maxConcurrentEvents = Math.max(maxConcurrentEvents, currentEventCount);
+                
+                if (type === EventTypes.TILES_REMOVED) {
+                    explosionCount++;
+                }
+                
+                // Simulate event processing complete
+                setTimeout(() => currentEventCount--, 0);
+            });
+            
+            // Trigger initial explosion at corner
+            eventBus.emit(EventTypes.TILE_DESTABILIZED, {
+                tile: { x: 0, y: 0 },
+                surgeLevel: 3,
+                source: 'test'
+            });
+            
+            // Wait for cascades to complete
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            const duration = performance.now() - startTime;
+            
+            // Performance assertions
+            Assert.truthy(duration < 3000, `Cascade should complete within 3 seconds (took ${duration}ms)`);
+            Assert.truthy(explosionCount > 10, `Should have many explosions (got ${explosionCount})`);
+            Assert.truthy(maxConcurrentEvents < 100, `Should not have too many concurrent events (max: ${maxConcurrentEvents})`);
+        });
+
+        // Test 9: Ripple randomization works correctly
+        test('FEATURES-02: Ripple selection is random but consistent count', () => {
+            const gridLogic = new GridLogic(8, 8);
+            
+            // Test selectRandom function
+            const items = [1, 2, 3, 4, 5, 6, 7, 8];
+            const selections = [];
+            
+            // Run multiple times to check randomization
+            for (let i = 0; i < 10; i++) {
+                const selected = gridLogic.selectRandom(items, 4);
+                Assert.equals(selected.length, 4, 'Should select exactly 4 items');
+                selections.push(selected.join(','));
+            }
+            
+            // Check that we get different selections (randomization works)
+            const uniqueSelections = new Set(selections);
+            Assert.truthy(uniqueSelections.size > 1, 'Should have different random selections');
+        });
+
+        // Test 10: Integration test - complete explosion flow
+        test('FEATURES-02: Complete explosion flow integration', async () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(5, 5);
+            const gridAdapter = new GridAdapter(gridLogic, eventBus);
+            const effectsQueue = new EffectsQueue(eventBus);
+            effectsQueue.init();
+            
+            // Set up a small grid for controlled testing
+            const testGrid = gridLogic.createEmptyGrid();
+            // Create a plus pattern
+            testGrid[2][2] = { letter: 'C', value: 3, type: 'normal' }; // Center
+            testGrid[1][2] = { letter: 'A', value: 1, type: 'normal' }; // Top
+            testGrid[3][2] = { letter: 'T', value: 1, type: 'normal' }; // Bottom
+            testGrid[2][1] = { letter: 'S', value: 1, type: 'normal' }; // Left
+            testGrid[2][3] = { letter: 'S', value: 1, type: 'normal' }; // Right
+            gridLogic.updateGrid(testGrid);
+            
+            const eventSequence = [];
+            eventBus.on('*', (type) => {
+                if (type !== 'STATE_CHANGED') { // Ignore state changes
+                    eventSequence.push(type);
+                }
+            });
+            
+            // Validate a word to trigger explosion
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'CAT',
+                score: 5,
+                tiles: [
+                    { x: 2, y: 2, letter: 'C' },
+                    { x: 2, y: 1, letter: 'A' },
+                    { x: 2, y: 3, letter: 'T' }
+                ],
+                timestamp: Date.now()
+            });
+            
+            // Wait for all animations and effects
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Verify event sequence
+            Assert.truthy(eventSequence.includes(EventTypes.TILES_REMOVED), 'Should remove tiles');
+            Assert.truthy(eventSequence.includes(EventTypes.RIPPLE_EFFECT), 'Should create ripples');
+            Assert.truthy(eventSequence.includes(EventTypes.ANIMATION_STARTED), 'Should start animations');
+            Assert.truthy(eventSequence.includes(EventTypes.ANIMATION_COMPLETE), 'Should complete animations');
+            Assert.truthy(eventSequence.includes(EventTypes.GRAVITY_APPLIED), 'Should apply gravity');
+            Assert.truthy(eventSequence.includes(EventTypes.GRID_UPDATED), 'Should update grid');
+        });
+    </script>
+</body>
+</html>

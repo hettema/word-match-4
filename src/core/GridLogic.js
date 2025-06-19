@@ -184,4 +184,44 @@ export class GridLogic {
         }
         return count;
     }
+    
+    // Calculate ripple effects from epicenters
+    calculateRipples(epicenters, spreadPercentage) {
+        const affectedTiles = [];
+        const visited = new Set();
+        
+        epicenters.forEach(epicenter => {
+            const neighbors = this.getNeighbors(epicenter.x, epicenter.y);
+            const eligibleNeighbors = neighbors.filter(n => {
+                const key = `${n.x},${n.y}`;
+                const tile = this.tiles[n.y][n.x];
+                return tile && tile.type === 'normal' && !visited.has(key);
+            });
+            
+            // Select percentage of neighbors randomly
+            const numToSelect = Math.ceil(eligibleNeighbors.length * spreadPercentage);
+            const selected = this.selectRandom(eligibleNeighbors, numToSelect);
+            
+            selected.forEach(neighbor => {
+                const key = `${neighbor.x},${neighbor.y}`;
+                visited.add(key);
+                affectedTiles.push({ x: neighbor.x, y: neighbor.y });
+            });
+        });
+        
+        return affectedTiles;
+    }
+    
+    // Select random items from array
+    selectRandom(items, count) {
+        if (count >= items.length) return [...items];
+        
+        const shuffled = [...items];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        
+        return shuffled.slice(0, count);
+    }
 }

@@ -70,14 +70,14 @@ export class Tile {
         if (this.shakeTween) { this.shakeTween.stop(); this.shakeTween = null; }
         
         if (this.surgeCount > 0) {
-            this.sprite.setTint(tints[this.surgeCount]); 
+            this.sprite.setFillStyle(tints[this.surgeCount]); 
             this.sprite.setAlpha(alphas[this.surgeCount]);
             this.updateSurgeIndicators();
             if (this.surgeCount === 2) this.addWobble();
             else if (this.surgeCount === 3) this.addCriticalShake();
         } else {
             // Reset to normal state
-            this.sprite.clearTint();
+            this.sprite.setFillStyle(this.getTileColor());
             this.sprite.setAlpha(1).setAngle(0);
             this.textObject.setAngle(0);
             this.sprite.x = this.worldX;
