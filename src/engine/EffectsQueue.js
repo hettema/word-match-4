@@ -40,16 +40,16 @@ export class EffectsQueue {
     handleGravityApplied(data) {
         const { tilesDropped, timestamp } = data;
         
-        // Queue fall animations for dropped tiles
-        tilesDropped.forEach((drop, index) => {
+        // Create a single batch animation for all falling tiles
+        if (tilesDropped.length > 0) {
             this.queue.push({
-                type: 'fall',
-                target: { from: drop.from, to: drop.to, tile: drop.tile },
-                delay: index * 30, // Stagger falls
-                duration: 300,
+                type: 'fall-batch',
+                target: { drops: tilesDropped },
+                delay: 0,
+                duration: 600, // Match the max fall duration
                 timestamp: timestamp
             });
-        });
+        }
         
         // Continue processing
         if (!this.isProcessing) {

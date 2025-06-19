@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "todo/25-FEATURES-03-cascade-system.md",
+                "file": "todo/26-FEATURES-03a-cascade-polish.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "25-FEATURES-03-cascade-system"
+              "title": "26-FEATURES-03a-cascade-polish"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "todo/25-FEATURES-03-cascade-system.md",
+                "file": "todo/26-FEATURES-03a-cascade-polish.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 25-FEATURES-03-cascade-system"
+              "title": "Backlinks for 26-FEATURES-03a-cascade-polish"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "todo/25-FEATURES-03-cascade-system.md",
+                "file": "todo/26-FEATURES-03a-cascade-polish.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 25-FEATURES-03-cascade-system"
+              "title": "Outgoing links from 26-FEATURES-03a-cascade-polish"
             }
           },
           {
@@ -142,13 +142,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "todo/25-FEATURES-03-cascade-system.md",
+                "file": "todo/26-FEATURES-03a-cascade-polish.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 25-FEATURES-03-cascade-system"
+              "title": "Outline of 26-FEATURES-03a-cascade-polish"
             }
           }
         ]
@@ -170,42 +170,42 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "todo/25-FEATURES-03-cascade-system.md",
+    "done/25-FEATURES-03-cascade-system.md",
+    "todo/26-FEATURES-03a-cascade-polish.md",
+    "todo/27-TESTING-04-cascade-stress-tests.md",
+    "todo/38-TESTING-03-browser-compatibility.md",
+    "todo/37-POLISH-03-mobile-responsiveness.md",
+    "todo/36-POLISH-02-performance-optimization.md",
+    "todo/35a-TESTING-05-performance-benchmarks.md",
+    "todo/35-POLISH-01-animation-polish.md",
+    "todo/34-POLISH-00-sound-system.md",
+    "todo/33-FEATURES-08-hidden-tile.md",
+    "todo/32-FEATURES-07-stone-blocker.md",
+    "todo/31-FEATURES-06-ice-blocker.md",
+    "todo/30-FEATURES-05-multiplier-tile.md",
+    "todo/29-FEATURES-04-bomb-tile.md",
+    "todo/28-FEATURES-09-level-system.md",
+    "todo/26-TESTING-04-cascade-stress-tests.md",
+    "todo/25-FEATURES-03a-cascade-polish.md",
+    "todo/25a-TESTING-04-cascade-stress-tests.md",
+    "ai-programming-learnings.md",
+    "todo/25b-FEATURES-03a-cascade-polish.md",
+    "kanban-rules.md",
+    "prd-word-match.md",
+    "tdd-word-match.md",
+    "CLAUDE.md",
+    "tests/features-03-cascade-system.test.html",
     "todo/24-FEATURES-02-explosion-system.md",
-    "done/24-FEATURES-02-explosion-system.md",
     "tests/features-02-explosion-system.test.html",
     "tests/visual-effects-verification.test.html",
-    "todo/25-FEATURES-03-cascade-system.md",
     "tests/cascade-stress.test.html",
-    "todo/25a-TESTING-04-cascade-stress-tests.md",
-    "todo/23-FEATURES-01-word-mechanics.md",
-    "done/23-FEATURES-01-word-mechanics.md",
     "tests/features-01-word-mechanics.test.html",
-    "done/22-UI-03-game-state-ui.md",
-    "todo/22-UI-03-game-state-ui.md",
     "tests/game-state-ui.test.html",
     "src/ui/GameStateUI.js",
-    "done/19-ENGINE-04-effects-queue.md",
-    "todo/21-UI-02-word-tracer.md",
-    "done/21-UI-02-word-tracer.md",
     "tests/word-tracer.test.html",
     "src/ui/WordTracer.js",
-    "todo/20-UI-01-hud-implementation.md",
-    "done/20-UI-01-hud-implementation.md",
     "tests/hud.test.html",
-    "src/ui/HUD.js",
-    "todo/36-TESTING-03-browser-compatibility.md",
-    "todo/35-POLISH-03-mobile-responsiveness.md",
-    "todo/34-POLISH-02-performance-optimization.md",
-    "todo/33a-TESTING-05-performance-benchmarks.md",
-    "todo/33-POLISH-01-animation-polish.md",
-    "todo/32-POLISH-00-sound-system.md",
-    "todo/31-FEATURES-08-hidden-tile.md",
-    "todo/30-FEATURES-07-stone-blocker.md",
-    "todo/29-FEATURES-06-ice-blocker.md",
-    "todo/28-FEATURES-05-multiplier-tile.md",
-    "todo/27-FEATURES-04-bomb-tile.md",
-    "todo/26-FEATURES-09-level-system.md",
-    "todo/30a-POLISH-00-sound-system.md",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]

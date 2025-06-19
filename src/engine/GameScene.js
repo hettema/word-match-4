@@ -64,16 +64,8 @@ export class GameScene extends Phaser.Scene {
                             worldY: worldY
                         });
                     } else {
-                        // Update existing tile if properties changed
-                        existingTile.type = tileData.type;
-                        existingTile.letter = tileData.letter;
-                        existingTile.value = tileData.value;
-                        existingTile.sprite.setFillStyle(existingTile.getTileColor());
-                        existingTile.textObject.setText(existingTile.getDisplayText());
-                        if (existingTile.valueText) {
-                            existingTile.valueText.setText(tileData.value || '');
-                            existingTile.valueText.setVisible(tileData.type === 'normal' || !tileData.type);
-                        }
+                        // Don't update tile properties - tiles keep their identity!
+                        // The grid update should only affect position, not content
                     }
                 } else if (existingTile) {
                     // Remove tile
@@ -185,7 +177,58 @@ export class GameScene extends Phaser.Scene {
         });
     }
     
-    handleAnimationStarted(data) { }
+    handleAnimationStarted(data) {
+        if (data.type === 'fall-batch' && data.target) {
+            // Handle all falling tiles at once
+            const { drops } = data.target;
+            const width = this.gridLogic.width, height = this.gridLogic.height;
+            const gridWidth = width * this.tileSize, gridHeight = height * this.tileSize;
+            const offsetX = (this.game.config.width - gridWidth) / 2;
+            const offsetY = (this.game.config.height - gridHeight) / 2;
+            
+            // Start all fall animations simultaneously
+            drops.forEach(drop => {
+                const { from, to } = drop;
+                const fromTile = this.tiles[from.y] && this.tiles[from.y][from.x];
+                
+                if (fromTile) {
+                    const targetY = offsetY + to.y * this.tileSize + this.tileSize / 2;
+                    
+                    // Collect all visual elements
+                    const targets = [
+                        fromTile.sprite, 
+                        fromTile.textObject, 
+                        fromTile.valueText,
+                        ...(fromTile.surgeIndicators || [])
+                    ].filter(Boolean);
+                    
+                    // Calculate fall distance for variable speed
+                    const distance = to.y - from.y;
+                    const baseDuration = 300;
+                    const duration = Math.min(baseDuration + (distance * 60), 600); // Cap at 600ms
+                    
+                    // Animate with physics-like acceleration
+                    this.tweens.add({
+                        targets: targets,
+                        y: targetY,
+                        duration: duration,
+                        ease: 'Quad.easeIn', // Gentler acceleration
+                        onComplete: () => {
+                            // Update tile position
+                            fromTile.worldY = targetY;
+                            fromTile.gridY = to.y;
+                            this.tiles[to.y][to.x] = fromTile;
+                            if (from.y !== to.y) {
+                                this.tiles[from.y][from.x] = null;
+                            }
+                            fromTile.updateSurgeIndicators();
+                        }
+                    });
+                }
+            });
+        }
+    }
+    
     handleAnimationComplete(data) { }
     
     getTileAt(x, y) {

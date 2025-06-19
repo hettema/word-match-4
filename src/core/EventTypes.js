@@ -14,6 +14,7 @@ export const EventTypes = {
   
   // Grid Events
   TILES_REMOVED: 'TILES_REMOVED',
+  TILES_REMOVED_COMPLETE: 'TILES_REMOVED_COMPLETE',
   GRAVITY_APPLIED: 'GRAVITY_APPLIED',
   GRID_UPDATED: 'GRID_UPDATED',
   
@@ -65,6 +66,7 @@ export const EventContracts = {
   WORD_VALIDATED: { word: 'string', score: 'number', tiles: 'Array<{x: number, y: number, letter: string}>', timestamp: 'number' },
   WORD_REJECTED: { word: 'string', reason: 'string', timestamp: 'number' },
   TILES_REMOVED: { positions: 'Array<{x: number, y: number}>', source: 'string', timestamp: 'number' },
+  TILES_REMOVED_COMPLETE: { positions: 'Array<{x: number, y: number}>', timestamp: 'number' },
   GRAVITY_APPLIED: { tilesDropped: 'Array', timestamp: 'number' }, // Array of {from: {x, y}, to: {x, y}, tile}
   GRID_UPDATED: { grid: 'Array<Array<object>>', changedPositions: 'Array<{x: number, y: number}>', timestamp: 'number' },
   CHAIN_REACTION_STARTED: { origin: '{x: number, y: number}', chainLength: 'number', timestamp: 'number' },

@@ -6,12 +6,13 @@ export class GridAdapter {
         this.gridLogic = gridLogic;
         this.eventBus = eventBus;
         this.tileSurgeCount = new Map(); // Track surge count for each tile
+        this.gravityScheduled = false; // Prevent duplicate gravity applications
         
         // Listen for grid-affecting events
         eventBus.on(EventTypes.GRID_UPDATED, this.handleGridUpdated.bind(this));
         eventBus.on(EventTypes.WORD_VALIDATED, this.handleWordValidated.bind(this));
         eventBus.on(EventTypes.BOMB_TRIGGERED, this.handleBombTriggered.bind(this));
-        eventBus.on(EventTypes.ANIMATION_COMPLETE, this.handleAnimationComplete.bind(this));
+        eventBus.on(EventTypes.TILES_REMOVED_COMPLETE, this.handleTilesRemovedComplete.bind(this));
         eventBus.on(EventTypes.TILE_DESTABILIZED, this.handleTileDestabilized.bind(this));
         eventBus.on(EventTypes.RIPPLE_EFFECT, this.handleRippleEffect.bind(this));
     }
@@ -76,11 +77,22 @@ export class GridAdapter {
             const newGrid = this.gridLogic.cloneGrid();
             removed.forEach(pos => newGrid[pos.y][pos.x] = null);
             this.gridLogic.updateGrid(newGrid);
+            
+            // Schedule gravity after a brief delay to let player see the explosion
+            setTimeout(() => {
+                this.eventBus.emit(EventTypes.TILES_REMOVED_COMPLETE, {
+                    positions: removed,
+                    timestamp: Date.now()
+                });
+            }, 400); // Wait for explosion animation to be visible
         }
         return removed;
     }
     
-    handleAnimationComplete(data) { this.applyGravityAndRefill(); }
+    handleTilesRemovedComplete(data) { 
+        // Apply gravity immediately when tiles are removed
+        this.applyGravityAndRefill();
+    }
     
     applyGravityAndRefill() {
         // Apply gravity
