@@ -26,8 +26,8 @@ export class SelectionAdapter {
         // Use positions from the event instead of currentSelection
         const positions = data.positions || [];
         
-        // Only submit if we have at least 2 tiles selected
-        if (positions.length < 2) {
+        // Only submit if we have at least 3 tiles selected (minimum word length)
+        if (positions.length < 3) {
             return;
         }
         

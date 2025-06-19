@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "todo/23-FEATURES-01-word-mechanics.md",
+                "file": "todo/25a-TESTING-04-cascade-stress-tests.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "23-FEATURES-01-word-mechanics"
+              "title": "25a-TESTING-04-cascade-stress-tests"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "todo/23-FEATURES-01-word-mechanics.md",
+                "file": "todo/25a-TESTING-04-cascade-stress-tests.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 23-FEATURES-01-word-mechanics"
+              "title": "Backlinks for 25a-TESTING-04-cascade-stress-tests"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "todo/23-FEATURES-01-word-mechanics.md",
+                "file": "todo/25a-TESTING-04-cascade-stress-tests.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from 23-FEATURES-01-word-mechanics"
+              "title": "Outgoing links from 25a-TESTING-04-cascade-stress-tests"
             }
           },
           {
@@ -142,13 +142,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "todo/23-FEATURES-01-word-mechanics.md",
+                "file": "todo/25a-TESTING-04-cascade-stress-tests.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 23-FEATURES-01-word-mechanics"
+              "title": "Outline of 25a-TESTING-04-cascade-stress-tests"
             }
           }
         ]
@@ -170,6 +170,9 @@
   },
   "active": "92dff61709883541",
   "lastOpenFiles": [
+    "todo/23-FEATURES-01-word-mechanics.md",
+    "done/23-FEATURES-01-word-mechanics.md",
+    "tests/features-01-word-mechanics.test.html",
     "done/22-UI-03-game-state-ui.md",
     "todo/25a-TESTING-04-cascade-stress-tests.md",
     "todo/22-UI-03-game-state-ui.md",
@@ -203,9 +206,6 @@
     "tests/effects-queue.test.html",
     "src/engine/EffectsQueue.js",
     "prd-word-match.md",
-    "todo/19-ENGINE-04-effects-queue.md",
-    "todo/23-FEATURES-01-word-mechanics.md",
-    "tests/selection-adapter.test.html",
     "node_modules/union/union.png",
     "node_modules/union/examples/simple/favicon.png"
   ]

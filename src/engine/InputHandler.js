@@ -67,8 +67,8 @@ export class InputHandler {
         const { timestamp } = data;
         this.isTracing = false;
         
-        // Emit selection complete if we have at least 2 tiles
-        if (this.selectedTiles.length >= 2) {
+        // Emit selection complete if we have at least 3 tiles (minimum word length)
+        if (this.selectedTiles.length >= 3) {
             this.eventBus.emit(EventTypes.SELECTION_COMPLETE, {
                 positions: [...this.selectedTiles],
                 timestamp: timestamp || Date.now()

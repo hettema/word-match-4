@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FEATURES-01: Word Mechanics Integration Tests</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <h1>FEATURES-01: Word Mechanics Integration Tests</h1>
+    <div id="test-results"></div>
+    
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+        import { InputHandler } from '../src/engine/InputHandler.js';
+        import { SelectionAdapter } from '../src/adapters/SelectionAdapter.js';
+        import { WordValidator } from '../src/systems/WordValidator.js';
+        import { WordValidatorAdapter } from '../src/adapters/WordValidatorAdapter.js';
+        import { GridLogic } from '../src/core/GridLogic.js';
+        import { GridAdapter } from '../src/adapters/GridAdapter.js';
+
+        // Test 1: 8-directional word tracing
+        test('FEATURES-01: 8-directional tile selection', () => {
+            const eventBus = new EventBus();
+            const inputHandler = new InputHandler(eventBus);
+            inputHandler.init();
+            
+            // Track selection changes
+            let lastSelection = [];
+            eventBus.on(EventTypes.SELECTION_CHANGED, (data) => {
+                lastSelection = data.tiles;
+            });
+            
+            // Start selection
+            eventBus.emit(EventTypes.TILE_PRESSED, { x: 2, y: 2, timestamp: Date.now() });
+            Assert.equals(lastSelection.length, 1, 'Should have 1 tile selected');
+            
+            // Test all 8 directions from center (2,2)
+            const directions = [
+                {x: 3, y: 2}, // Right
+                {x: 1, y: 2}, // Left
+                {x: 2, y: 1}, // Up
+                {x: 2, y: 3}, // Down
+                {x: 3, y: 1}, // Up-Right
+                {x: 1, y: 1}, // Up-Left
+                {x: 3, y: 3}, // Down-Right
+                {x: 1, y: 3}  // Down-Left
+            ];
+            
+            directions.forEach(dir => {
+                // Reset selection
+                eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: Date.now() });
+                eventBus.emit(EventTypes.TILE_PRESSED, { x: 2, y: 2, timestamp: Date.now() });
+                
+                // Try to select adjacent tile
+                eventBus.emit(EventTypes.TILE_ENTERED, { x: dir.x, y: dir.y, timestamp: Date.now() });
+                Assert.equals(lastSelection.length, 2, `Should select tile at (${dir.x},${dir.y})`);
+            });
+        });
+
+        // Test 2: Only connected tiles can be selected
+        test('FEATURES-01: Only adjacent tiles can be selected', () => {
+            const eventBus = new EventBus();
+            const inputHandler = new InputHandler(eventBus);
+            inputHandler.init();
+            
+            let lastSelection = [];
+            eventBus.on(EventTypes.SELECTION_CHANGED, (data) => {
+                lastSelection = data.tiles;
+            });
+            
+            // Start selection at (0,0)
+            eventBus.emit(EventTypes.TILE_PRESSED, { x: 0, y: 0, timestamp: Date.now() });
+            
+            // Try to select non-adjacent tile at (2,2)
+            eventBus.emit(EventTypes.TILE_ENTERED, { x: 2, y: 2, timestamp: Date.now() });
+            Assert.equals(lastSelection.length, 1, 'Should not select non-adjacent tile');
+            
+            // Select adjacent tile at (1,0)
+            eventBus.emit(EventTypes.TILE_ENTERED, { x: 1, y: 0, timestamp: Date.now() });
+            Assert.equals(lastSelection.length, 2, 'Should select adjacent tile');
+            
+            // Now try (2,0) which is adjacent to (1,0)
+            eventBus.emit(EventTypes.TILE_ENTERED, { x: 2, y: 0, timestamp: Date.now() });
+            Assert.equals(lastSelection.length, 3, 'Should select next adjacent tile');
+        });
+
+        // Test 3: Minimum word length of 3
+        test('FEATURES-01: Minimum word length enforced', () => {
+            const eventBus = new EventBus();
+            const inputHandler = new InputHandler(eventBus);
+            inputHandler.init();
+            
+            let selectionCompleted = false;
+            eventBus.on(EventTypes.SELECTION_COMPLETE, () => {
+                selectionCompleted = true;
+            });
+            
+            // Select only 2 tiles
+            eventBus.emit(EventTypes.TILE_PRESSED, { x: 0, y: 0, timestamp: Date.now() });
+            eventBus.emit(EventTypes.TILE_ENTERED, { x: 1, y: 0, timestamp: Date.now() });
+            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: Date.now() });
+            
+            Assert.falsy(selectionCompleted, 'Should not complete selection with only 2 tiles');
+            
+            // Select 3 tiles
+            selectionCompleted = false;
+            eventBus.emit(EventTypes.TILE_PRESSED, { x: 0, y: 0, timestamp: Date.now() });
+            eventBus.emit(EventTypes.TILE_ENTERED, { x: 1, y: 0, timestamp: Date.now() });
+            eventBus.emit(EventTypes.TILE_ENTERED, { x: 2, y: 0, timestamp: Date.now() });
+            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: Date.now() });
+            
+            Assert.truthy(selectionCompleted, 'Should complete selection with 3 tiles');
+        });
+
+        // Test 4: Word validation against dictionary
+        test('FEATURES-01: Words validated against dictionary', async () => {
+            const eventBus = new EventBus();
+            const testDict = new Set(['CAT', 'DOG', 'HELLO', 'WORLD']);
+            const wordValidator = new WordValidator(testDict);
+            const wordValidatorAdapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            let validatedWord = null;
+            let rejectedWord = null;
+            
+            eventBus.on(EventTypes.WORD_VALIDATED, (data) => {
+                validatedWord = data.word;
+            });
+            
+            eventBus.on(EventTypes.WORD_REJECTED, (data) => {
+                rejectedWord = { word: data.word, reason: data.reason };
+            });
+            
+            // Test valid word
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'CAT',
+                tiles: [
+                    { x: 0, y: 0, letter: 'C', value: 3 },
+                    { x: 1, y: 0, letter: 'A', value: 1 },
+                    { x: 2, y: 0, letter: 'T', value: 1 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 10));
+            Assert.equals(validatedWord, 'CAT', 'Valid word should be validated');
+            
+            // Test invalid word
+            validatedWord = null;
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'XYZ',
+                tiles: [
+                    { x: 0, y: 0, letter: 'X', value: 8 },
+                    { x: 1, y: 0, letter: 'Y', value: 4 },
+                    { x: 2, y: 0, letter: 'Z', value: 10 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 10));
+            Assert.equals(rejectedWord.word, 'XYZ', 'Invalid word should be rejected');
+            Assert.equals(rejectedWord.reason, 'NOT_IN_DICTIONARY', 'Should provide rejection reason');
+        });
+
+        // Test 5: Valid words trigger tile removal
+        test('FEATURES-01: Valid words trigger tile removal', async () => {
+            const eventBus = new EventBus();
+            const gridLogic = new GridLogic(8, 8);
+            const gridAdapter = new GridAdapter(gridLogic, eventBus);
+            
+            // Set up test grid
+            const testGrid = gridLogic.createEmptyGrid();
+            testGrid[0][0] = { letter: 'C', value: 3, type: 'normal' };
+            testGrid[0][1] = { letter: 'A', value: 1, type: 'normal' };
+            testGrid[0][2] = { letter: 'T', value: 1, type: 'normal' };
+            gridLogic.updateGrid(testGrid);
+            
+            let tilesRemoved = null;
+            eventBus.on(EventTypes.TILES_REMOVED, (data) => {
+                tilesRemoved = data.positions;
+            });
+            
+            // Emit word validated event
+            eventBus.emit(EventTypes.WORD_VALIDATED, {
+                word: 'CAT',
+                score: 5,
+                tiles: [
+                    { x: 0, y: 0, letter: 'C' },
+                    { x: 1, y: 0, letter: 'A' },
+                    { x: 2, y: 0, letter: 'T' }
+                ],
+                timestamp: Date.now()
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 10));
+            Assert.truthy(tilesRemoved, 'TILES_REMOVED event should be emitted');
+            Assert.equals(tilesRemoved.length, 3, 'Should remove 3 tiles');
+            
+            // Check grid state
+            Assert.equals(gridLogic.getTile(0, 0), null, 'Tile at (0,0) should be removed');
+            Assert.equals(gridLogic.getTile(1, 0), null, 'Tile at (1,0) should be removed');
+            Assert.equals(gridLogic.getTile(2, 0), null, 'Tile at (2,0) should be removed');
+        });
+
+        // Test 6: Full integration test
+        test('FEATURES-01: Full word submission flow', async () => {
+            const eventBus = new EventBus();
+            
+            // Set up all components
+            const gridLogic = new GridLogic(8, 8);
+            const inputHandler = new InputHandler(eventBus);
+            const selectionAdapter = new SelectionAdapter(gridLogic, eventBus);
+            const wordValidator = new WordValidator(new Set(['CAT']));
+            const wordValidatorAdapter = new WordValidatorAdapter(wordValidator, eventBus);
+            const gridAdapter = new GridAdapter(gridLogic, eventBus);
+            
+            inputHandler.init();
+            
+            // Set up test grid
+            const testGrid = gridLogic.createEmptyGrid();
+            testGrid[0][0] = { letter: 'C', value: 3, type: 'normal' };
+            testGrid[0][1] = { letter: 'A', value: 1, type: 'normal' };
+            testGrid[0][2] = { letter: 'T', value: 1, type: 'normal' };
+            gridLogic.updateGrid(testGrid);
+            
+            // Track events
+            const events = [];
+            eventBus.on('*', (type, data) => {
+                events.push(type);
+            });
+            
+            // Simulate word tracing
+            eventBus.emit(EventTypes.TILE_PRESSED, { x: 0, y: 0, timestamp: Date.now() });
+            eventBus.emit(EventTypes.TILE_ENTERED, { x: 1, y: 0, timestamp: Date.now() });
+            eventBus.emit(EventTypes.TILE_ENTERED, { x: 2, y: 0, timestamp: Date.now() });
+            eventBus.emit(EventTypes.INPUT_RELEASED, { timestamp: Date.now() });
+            
+            // Wait for async events
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            // Verify event flow
+            Assert.truthy(events.includes(EventTypes.SELECTION_CHANGED), 'Should emit SELECTION_CHANGED');
+            Assert.truthy(events.includes(EventTypes.SELECTION_COMPLETE), 'Should emit SELECTION_COMPLETE');
+            Assert.truthy(events.includes(EventTypes.WORD_SUBMITTED), 'Should emit WORD_SUBMITTED');
+            Assert.truthy(events.includes(EventTypes.WORD_VALIDATED), 'Should emit WORD_VALIDATED');
+            Assert.truthy(events.includes(EventTypes.TILES_REMOVED), 'Should emit TILES_REMOVED');
+        });
+
+        // Test 7: Backtracking in word selection
+        test('FEATURES-01: Backtracking in word selection', () => {
+            const eventBus = new EventBus();
+            const inputHandler = new InputHandler(eventBus);
+            inputHandler.init();
+            
+            let lastSelection = [];
+            eventBus.on(EventTypes.SELECTION_CHANGED, (data) => {
+                lastSelection = data.tiles;
+            });
+            
+            // Select tiles: (0,0) -> (1,0) -> (2,0)
+            eventBus.emit(EventTypes.TILE_PRESSED, { x: 0, y: 0, timestamp: Date.now() });
+            eventBus.emit(EventTypes.TILE_ENTERED, { x: 1, y: 0, timestamp: Date.now() });
+            eventBus.emit(EventTypes.TILE_ENTERED, { x: 2, y: 0, timestamp: Date.now() });
+            Assert.equals(lastSelection.length, 3, 'Should have 3 tiles selected');
+            
+            // Backtrack to (1,0)
+            eventBus.emit(EventTypes.TILE_ENTERED, { x: 1, y: 0, timestamp: Date.now() });
+            Assert.equals(lastSelection.length, 2, 'Should backtrack to 2 tiles');
+            Assert.equals(lastSelection[1].x, 1, 'Last tile should be (1,0)');
+        });
+
+        // Test 8: Invalid word feedback
+        test('FEATURES-01: Invalid word provides feedback', async () => {
+            const eventBus = new EventBus();
+            const wordValidator = new WordValidator(new Set(['VALID']));
+            const wordValidatorAdapter = new WordValidatorAdapter(wordValidator, eventBus);
+            
+            const rejectionReasons = [];
+            eventBus.on(EventTypes.WORD_REJECTED, (data) => {
+                rejectionReasons.push(data.reason);
+            });
+            
+            // Test too short
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'AB',
+                tiles: [
+                    { x: 0, y: 0, letter: 'A', value: 1 },
+                    { x: 1, y: 0, letter: 'B', value: 3 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 10));
+            Assert.truthy(rejectionReasons.includes('TOO_SHORT'), 'Should reject too short words');
+            
+            // Test not in dictionary
+            eventBus.emit(EventTypes.WORD_SUBMITTED, {
+                word: 'XYZ',
+                tiles: [
+                    { x: 0, y: 0, letter: 'X', value: 8 },
+                    { x: 1, y: 0, letter: 'Y', value: 4 },
+                    { x: 2, y: 0, letter: 'Z', value: 10 }
+                ],
+                timestamp: Date.now()
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 10));
+            Assert.truthy(rejectionReasons.includes('NOT_IN_DICTIONARY'), 'Should reject words not in dictionary');
+        });
+    </script>
+</body>
+</html>
