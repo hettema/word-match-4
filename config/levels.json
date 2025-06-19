@@ -5,7 +5,7 @@
       "name": "Getting Started",
       "gridSize": { "width": 8, "height": 8 },
       "targetScore": 1000,
-      "moveLimit": 20,
+      "moveLimit": 3,
       "tileDistribution": "scrabble_uk",
       "rippleConfig": {
         "spreadPercentage": 0.5,

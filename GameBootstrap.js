@@ -14,6 +14,7 @@ import { GameAdapter } from './src/adapters/GameAdapter.js';
 import { ScoreAdapter } from './src/adapters/ScoreAdapter.js';
 import { SelectionAdapter } from './src/adapters/SelectionAdapter.js';
 import HUD from './src/ui/HUD.js';
+import GameStateUI from './src/ui/GameStateUI.js';
 
 class GameBootstrap {
     constructor() {
@@ -108,6 +109,9 @@ class GameBootstrap {
         // Create HUD for UI display
         this.hud = new HUD(this.eventBus);
         
+        // Create Game State UI for victory/defeat overlays
+        this.gameStateUI = new GameStateUI(this.eventBus);
+        
         console.log('Systems initialized - all adapters connected');
     }
     
@@ -189,7 +193,7 @@ class GameBootstrap {
             levelId: 1,
             config: {
                 targetScore: 1000,
-                moves: 30
+                moves: 3
             },
             timestamp: Date.now()
         });
@@ -202,7 +206,7 @@ class GameBootstrap {
         });
         
         this.eventBus.emit(EventTypes.MOVES_CHANGED, {
-            moves: 30,
+            moves: 3,
             movesUsed: 0,
             timestamp: Date.now()
         });

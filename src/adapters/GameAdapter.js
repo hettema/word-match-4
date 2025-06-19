@@ -20,8 +20,8 @@ export class GameAdapter {
         // Initialize level with configuration
         const levelConfig = {
             id: level,
-            moveLimit: 30, // Default, should come from level data
-            targetScore: 1000 // Default, should come from level data
+            moveLimit: 3, // Set to 3 for testing defeat
+            targetScore: 1000 // Set high for testing defeat
         };
         
         const result = this.gameLogic.initLevel(levelConfig);

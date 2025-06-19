@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameStateUI Tests</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <h1>GameStateUI Tests</h1>
+    <div id="test-results"></div>
+    
+    <div id="game-container" style="width: 400px; height: 300px; background: #333; margin: 20px auto;"></div>
+
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import GameStateUI from '../src/ui/GameStateUI.js';
+        import { EventBus } from '../src/core/EventBus.js';
+        import { EventTypes } from '../src/core/EventTypes.js';
+
+        test('GameStateUI - creates victory and defeat overlays', () => {
+            const eventBus = new EventBus();
+            const ui = new GameStateUI(eventBus);
+            
+            const victoryOverlay = document.getElementById('victoryOverlay');
+            const defeatOverlay = document.getElementById('defeatOverlay');
+            
+            Assert.truthy(victoryOverlay, 'Victory overlay should be created');
+            Assert.truthy(defeatOverlay, 'Defeat overlay should be created');
+            Assert.equals(victoryOverlay.className, 'game-overlay', 'Victory overlay should have correct class');
+            Assert.equals(defeatOverlay.className, 'game-overlay', 'Defeat overlay should have correct class');
+            
+            ui.destroy();
+        });
+
+        test('GameStateUI - shows victory overlay on VICTORY event', async () => {
+            const eventBus = new EventBus();
+            const ui = new GameStateUI(eventBus);
+            const victoryOverlay = document.getElementById('victoryOverlay');
+            const scoreElement = document.getElementById('victoryScore');
+            
+            eventBus.emit(EventTypes.VICTORY, { score: 1234, movesUsed: 10, timeElapsed: 120, timestamp: Date.now() });
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            Assert.truthy(victoryOverlay.classList.contains('active'), 'Victory overlay should be active');
+            Assert.equals(scoreElement.textContent, '1234', 'Score should be displayed correctly');
+            Assert.truthy(document.getElementById('game-container').classList.contains('blurred'), 'Game container should be blurred');
+            
+            ui.destroy();
+        });
+
+        test('GameStateUI - shows defeat overlay on DEFEAT event', async () => {
+            const eventBus = new EventBus();
+            const ui = new GameStateUI(eventBus);
+            const defeatOverlay = document.getElementById('defeatOverlay');
+            const scoreElement = document.getElementById('defeatScore');
+            
+            eventBus.emit(EventTypes.DEFEAT, { score: 567, movesUsed: 20, reason: 'no_moves', timestamp: Date.now() });
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            Assert.truthy(defeatOverlay.classList.contains('active'), 'Defeat overlay should be active');
+            Assert.equals(scoreElement.textContent, '567', 'Score should be displayed correctly');
+            Assert.truthy(document.getElementById('game-container').classList.contains('blurred'), 'Game container should be blurred');
+            
+            ui.destroy();
+        });
+
+        test('GameStateUI - next level button hides overlay without emitting events', async () => {
+            const eventBus = new EventBus();
+            
+            // Track if any events are emitted (except the VICTORY we emit for testing)
+            let eventCount = 0;
+            eventBus.on('*', (type) => {
+                eventCount++;
+            });
+            
+            const ui = new GameStateUI(eventBus);
+            const victoryOverlay = document.getElementById('victoryOverlay');
+            
+            eventBus.emit(EventTypes.VICTORY, { score: 100, movesUsed: 5, timeElapsed: 60, timestamp: Date.now() });
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Reset count after VICTORY event
+            const countBeforeClick = eventCount;
+            
+            const nextLevelBtn = document.getElementById('nextLevelBtn');
+            nextLevelBtn.click();
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            Assert.equals(eventCount, countBeforeClick, 'No additional events should be emitted per spec');
+            Assert.falsy(victoryOverlay.classList.contains('active'), 'Victory overlay should be hidden');
+            Assert.falsy(document.getElementById('game-container').classList.contains('blurred'), 'Game container blur should be removed');
+            
+            ui.destroy();
+        });
+
+        test('GameStateUI - retry button hides overlay without emitting events', async () => {
+            const eventBus = new EventBus();
+            
+            // Track if any events are emitted (except the DEFEAT we emit for testing)
+            let eventCount = 0;
+            eventBus.on('*', (type) => {
+                eventCount++;
+            });
+            
+            const ui = new GameStateUI(eventBus);
+            const defeatOverlay = document.getElementById('defeatOverlay');
+            
+            eventBus.emit(EventTypes.DEFEAT, { score: 100, movesUsed: 20, reason: 'no_moves', timestamp: Date.now() });
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Reset count after DEFEAT event
+            const countBeforeClick = eventCount;
+            
+            const retryBtn = document.getElementById('retryBtn');
+            retryBtn.click();
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            Assert.equals(eventCount, countBeforeClick, 'No additional events should be emitted per spec');
+            Assert.falsy(defeatOverlay.classList.contains('active'), 'Defeat overlay should be hidden');
+            Assert.falsy(document.getElementById('game-container').classList.contains('blurred'), 'Game container blur should be removed');
+            
+            ui.destroy();
+        });
+
+        test('GameStateUI - handles missing score data gracefully', async () => {
+            const eventBus = new EventBus();
+            // Temporarily disable contract validation for this test
+            eventBus.enableContractValidation = false;
+            
+            const ui = new GameStateUI(eventBus);
+            const scoreElement = document.getElementById('victoryScore');
+            
+            // Test with missing score field entirely
+            eventBus.emit(EventTypes.VICTORY, { movesUsed: 10, timeElapsed: 120, timestamp: Date.now() });
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            Assert.equals(scoreElement.textContent, '0', 'Should display 0 when score is missing');
+            
+            // Re-enable contract validation
+            eventBus.enableContractValidation = true;
+            ui.destroy();
+        });
+    </script>
+</body>
+</html>
