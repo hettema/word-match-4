@@ -1,6 +1,7 @@
 // src/engine/GameScene.js - VISUAL RENDERING ONLY
 import { EventTypes } from '../core/EventTypes.js';
 import { Tile } from './Tile.js';
+import { WordTracer } from '../ui/WordTracer.js';
 const COLORS = { bgDark: 0x2c3e50, bgPanel: 0x34495e, primary: 0x3498db, success: 0x2ecc71, danger: 0xe74c3c, warning: 0xf39c12, purple: 0x9b59b6, cyan: 0x00d9ff, textLight: 0xecf0f1, textMuted: 0xbdc3c7, border: 0x34495e, tileNormal: 0xecf0f1, tileBomb: 0xe74c3c, tileIce: 0x3498db, tileStone: 0x7f8c8d, tileMultiplier: 0xf39c12, tileHidden: 0x9b59b6 };
 const TILE_TYPES = { NORMAL: 'normal', BOMB: 'bomb', MULTIPLIER: 'multiplier', ICE: 'ice', STONE: 'stone', HIDDEN: 'hidden' };
 
@@ -12,7 +13,9 @@ export class GameScene extends Phaser.Scene {
         this.gridLogic = this.game.registry.get('gridLogic');
         if (!this.eventBus) { return; }
         if (!this.gridLogic) { return; }
-        this.tiles = []; this.createGrid(); this.setupRenderListeners();
+        this.tiles = []; this.createGrid(); 
+        this.wordTracer = new WordTracer(this);
+        this.setupRenderListeners();
     }
     
     setupRenderListeners() {
@@ -22,6 +25,8 @@ export class GameScene extends Phaser.Scene {
         this.eventBus.on(EventTypes.TILE_DESTABILIZED, (data) => this.renderDestabilization(data));
         this.eventBus.on(EventTypes.ANIMATION_STARTED, (data) => this.handleAnimationStarted(data));
         this.eventBus.on(EventTypes.ANIMATION_COMPLETE, (data) => this.handleAnimationComplete(data));
+        this.eventBus.on(EventTypes.WORD_REJECTED, () => this.handleWordRejected());
+        this.eventBus.on(EventTypes.WORD_VALIDATED, () => this.handleWordValidated());
     }
     
     createGrid() {
@@ -92,6 +97,19 @@ export class GameScene extends Phaser.Scene {
             const tile = this.tiles[pos.y] && this.tiles[pos.y][pos.x];
             if (tile) tile.setSelected(true);
         });
+        
+        // Update word tracer with selected tiles
+        if (this.wordTracer) {
+            const tilesToTrace = this.previousSelection.map(pos => {
+                return this.tiles[pos.y] && this.tiles[pos.y][pos.x];
+            }).filter(tile => tile !== null);
+            
+            if (tilesToTrace.length === 0) {
+                this.wordTracer.clear();
+            } else {
+                this.wordTracer.updateSelection(tilesToTrace);
+            }
+        }
     }
     animateExplosions(data) {
         const positions = data.positions || [];
@@ -149,6 +167,26 @@ export class GameScene extends Phaser.Scene {
                 duration: 500,
                 ease: 'Power2',
                 onComplete: () => fragment.destroy()
+            });
+        }
+    }
+    
+    handleWordRejected() {
+        if (this.wordTracer) {
+            this.wordTracer.setValidState(false);
+            // Clear after a short delay to show the invalid state
+            this.time.delayedCall(300, () => {
+                this.wordTracer.clear();
+            });
+        }
+    }
+    
+    handleWordValidated() {
+        if (this.wordTracer) {
+            this.wordTracer.setValidState(true);
+            // Clear immediately as tiles will explode
+            this.time.delayedCall(100, () => {
+                this.wordTracer.clear();
             });
         }
     }

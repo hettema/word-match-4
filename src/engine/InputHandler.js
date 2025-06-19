@@ -30,7 +30,22 @@ export class InputHandler {
         
         const { x, y, timestamp } = data;
         
-        // Check if already selected
+        // Check if this is a backtrack (going back to previous tile)
+        if (this.selectedTiles.length >= 2) {
+            const secondToLast = this.selectedTiles[this.selectedTiles.length - 2];
+            if (secondToLast.x === x && secondToLast.y === y) {
+                // Remove the last tile (backtracking)
+                this.selectedTiles.pop();
+                
+                this.eventBus.emit(EventTypes.SELECTION_CHANGED, {
+                    tiles: [...this.selectedTiles],
+                    timestamp: timestamp || Date.now()
+                });
+                return;
+            }
+        }
+        
+        // Check if already selected (but not backtracking)
         if (this.isAlreadySelected(x, y)) return;
         
         // Check if adjacent to last tile

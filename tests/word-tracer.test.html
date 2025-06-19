@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordTracer Tests</title>
+    <link rel="stylesheet" href="test-runner.css">
+</head>
+<body>
+    <h1>WordTracer Tests</h1>
+    <div id="test-results"></div>
+    
+    <script type="module">
+        import { test, Assert } from './test-runner.js';
+        import { WordTracer } from '../src/ui/WordTracer.js';
+        
+        // Mock Phaser scene and graphics
+        class MockGraphics {
+            constructor() {
+                this.cleared = false;
+                this.lineStyleData = { width: 0, color: 0, alpha: 1 };
+                this.pathStarted = false;
+                this.pathCommands = [];
+                this.strokeCalled = false;
+                this.depth = 0;
+            }
+            
+            clear() {
+                this.cleared = true;
+                this.pathCommands = [];
+                this.strokeCalled = false;
+            }
+            
+            lineStyle(width, color, alpha) {
+                this.lineStyleData = { width, color, alpha };
+            }
+            
+            beginPath() {
+                this.pathStarted = true;
+                this.pathCommands = [];
+            }
+            
+            moveTo(x, y) {
+                this.pathCommands.push({ type: 'moveTo', x, y });
+            }
+            
+            lineTo(x, y) {
+                this.pathCommands.push({ type: 'lineTo', x, y });
+            }
+            
+            strokePath() {
+                this.strokeCalled = true;
+            }
+            
+            setDepth(depth) {
+                this.depth = depth;
+            }
+            
+            destroy() {
+                this.destroyed = true;
+            }
+        }
+        
+        class MockScene {
+            constructor() {
+                this.graphics = new MockGraphics();
+            }
+            
+            add = {
+                graphics: () => this.graphics
+            };
+        }
+        
+        class MockTile {
+            constructor(worldX, worldY) {
+                this.worldX = worldX;
+                this.worldY = worldY;
+            }
+        }
+        
+        test('WordTracer: constructor initializes properly', async () => {
+            const scene = new MockScene();
+            const tracer = new WordTracer(scene);
+            
+            Assert.truthy(tracer.graphics, 'Graphics object created');
+            Assert.equals(tracer.graphics.depth, 100, 'Graphics depth set to 100');
+            Assert.equals(tracer.tracedTiles.length, 0, 'Traced tiles empty');
+            Assert.equals(tracer.lineColor, 0x00d9ff, 'Cyan color set');
+            Assert.equals(tracer.lineWidth, 3, 'Line width is 3');
+            Assert.equals(tracer.lineAlpha, 0.8, 'Alpha is 0.8');
+            Assert.equals(tracer.isValid, true, 'Default valid state');
+        });
+        
+        test('WordTracer: updateSelection updates tiles', async () => {
+            const scene = new MockScene();
+            const tracer = new WordTracer(scene);
+            const tiles = [new MockTile(100, 100), new MockTile(200, 200)];
+            
+            tracer.updateSelection(tiles);
+            
+            Assert.equals(tracer.tracedTiles.length, 2, 'Two tiles in trace');
+            Assert.equals(tracer.tracedTiles, tiles, 'Tiles stored correctly');
+            Assert.equals(scene.graphics.strokeCalled, true, 'Line drawn');
+        });
+        
+        test('WordTracer: drawLine draws between tiles', async () => {
+            const scene = new MockScene();
+            const tracer = new WordTracer(scene);
+            const tiles = [new MockTile(100, 100), new MockTile(200, 200)];
+            
+            tracer.tracedTiles = tiles;
+            tracer.drawLine();
+            
+            const graphics = scene.graphics;
+            Assert.equals(graphics.lineStyleData.color, 0x00d9ff, 'Cyan color used');
+            Assert.equals(graphics.pathCommands.length, 2, 'Two path commands');
+            Assert.equals(graphics.pathCommands[0].type, 'moveTo', 'First is moveTo');
+            Assert.equals(graphics.pathCommands[0].x, 100, 'Correct start X');
+            Assert.equals(graphics.pathCommands[1].type, 'lineTo', 'Second is lineTo');
+            Assert.equals(graphics.pathCommands[1].x, 200, 'Correct end X');
+        });
+        
+        test('WordTracer: no line drawn for single tile', async () => {
+            const scene = new MockScene();
+            const tracer = new WordTracer(scene);
+            const tiles = [new MockTile(100, 100)];
+            
+            tracer.updateSelection(tiles);
+            
+            Assert.equals(scene.graphics.pathCommands.length, 0, 'No path commands');
+            Assert.equals(scene.graphics.strokeCalled, false, 'Stroke not called');
+        });
+        
+        test('WordTracer: setValidState changes line color', async () => {
+            const scene = new MockScene();
+            const tracer = new WordTracer(scene);
+            const tiles = [new MockTile(100, 100), new MockTile(200, 200)];
+            
+            tracer.tracedTiles = tiles;
+            tracer.setValidState(false);
+            
+            Assert.equals(tracer.isValid, false, 'Valid state changed');
+            Assert.equals(scene.graphics.lineStyleData.color, 0xe74c3c, 'Red color for invalid');
+        });
+        
+        test('WordTracer: clear resets everything', async () => {
+            const scene = new MockScene();
+            const tracer = new WordTracer(scene);
+            const tiles = [new MockTile(100, 100)];
+            
+            tracer.updateSelection(tiles);
+            tracer.setValidState(false);
+            tracer.clear();
+            
+            Assert.equals(tracer.tracedTiles.length, 0, 'Tiles cleared');
+            Assert.equals(tracer.isValid, true, 'Valid state reset');
+            Assert.equals(scene.graphics.cleared, true, 'Graphics cleared');
+        });
+        
+        test('WordTracer: empty selection clears tracer', async () => {
+            const scene = new MockScene();
+            const tracer = new WordTracer(scene);
+            
+            tracer.updateSelection([new MockTile(100, 100)]);
+            tracer.updateSelection([]);
+            
+            Assert.equals(tracer.tracedTiles.length, 0, 'Tiles cleared');
+            Assert.equals(scene.graphics.cleared, true, 'Graphics cleared');
+        });
+        
+        test('WordTracer: destroy cleans up', async () => {
+            const scene = new MockScene();
+            const tracer = new WordTracer(scene);
+            
+            tracer.destroy();
+            
+            Assert.equals(scene.graphics.destroyed, true, 'Graphics destroyed');
+            Assert.equals(tracer.tracedTiles.length, 0, 'Tiles cleared');
+        });
+    </script>
+</body>
+</html>
